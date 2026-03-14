@@ -1,0 +1,66 @@
+{
+    "message_types": {
+        "version":"v1",
+        "name":"common",
+        "protoName": "message_types"
+    },
+    "games": [
+        {
+            "version":"v1",
+            "name": "common",
+            "dir":[
+                {"dir":"common","protoName":"game_common_player"},
+                {"dir":"common","protoName":"game_common_room"},
+                {"dir":"gateway","protoName":"gateway"}            
+            ]
+        },
+        {
+            "version":"v1",
+            "name": "solitaire",
+            "dir":[
+                {"dir":"common","protoName":"game_common_player"},
+                {"dir":"solitaire","protoName":"solitaire"}
+            ]
+        },
+        {
+            "version":"v1",
+            "name": "mines",
+            "dir":[
+                {"dir":"common","protoName":"game_common_player"},
+                {"dir":"mines","protoName":"mines"}
+            ]
+        },
+        {
+            "version":"v1",
+            "name": "bato",
+            "dir":[
+                {"dir":"common","protoName":"game_common_player"},
+                {"dir":"bato","protoName":"bato"}
+            ]
+        },
+        {
+            "version":"v1",
+            "name": "unleash",
+            "dir":[
+                {"dir":"common","protoName":"game_common_player"},
+                {"dir":"unleash","protoName":"unleash"}
+            ]
+        },
+        {
+            "version":"v1",
+            "name": "tongits",
+            "dir":[
+                {"dir":"common","protoName":"game_common_player"},
+                {"dir":"tongits","protoName":"tongits"}
+            ]
+        },
+        {
+            "version":"v1",
+            "name": "color",
+            "dir":[
+                {"dir":"common","protoName":"game_common_player"},
+                {"dir":"color","protoName":"color"}
+            ]
+        }
+    ]
+}

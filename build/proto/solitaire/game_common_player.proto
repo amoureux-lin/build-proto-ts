@@ -1,0 +1,150 @@
+syntax = "proto3";
+
+package common.v1;
+
+option go_package = "HeronGame/api/common/v1/pb;pb";
+
+import "../common/game_common_room.proto";
+
+// 服务器维护中广播
+// MessageType: COMMON_SERVER_CLOSED_BROADCAST
+message ServerClosedBroadcast {
+}
+
+// 玩家离线广播
+// MessageType: COMMON_OFFLINE_BROADCAST
+message UserOfflineBroadcast {
+  int64 bc_uid = 3;
+  int64 user_id = 1;
+  PlayerInfo player = 2;
+}
+
+//玩家加入房间广播
+// MessageType: COMMON_JOIN_ROOM_BROADCAST
+message JoinRoomBroadcast {
+  int64 bc_uid = 4;
+  int64 user_id = 1;
+  PlayerInfo player = 2;
+  int32 players_count = 3;
+}
+
+// 玩家退出房间请求
+// MessageType: COMMON_PLAYER_EXIT_ROOM_REQ
+message PlayerExitRoomReq {
+}
+
+// 玩家退出房间返回
+// MessageType: COMMON_PLAYER_EXIT_ROOM_RES
+message PlayerExitRoomRes {
+}
+
+//玩家离开房间广播
+// MessageType: COMMON_LEAVE_ROOM_BROADCAST
+message LeaveRoomBroadcast {
+  int64 bc_uid = 4;
+  int64 user_id = 1;
+  PlayerInfo player = 2;
+  int32 players_count = 3;
+}
+
+// 玩家坐下请求
+// MessageType: COMMON_PLAYER_SIT_DOWN_REQ
+message PlayerSitDownReq {
+  int32 seat = 1;
+}
+
+// 玩家坐下返回
+// MessageType: COMMON_PLAYER_SIT_DOWN_RES
+message PlayerSitDownRes {
+  int32 seat = 1;
+  int64 wait_ready_expired_time = 4; // 等待玩家准备倒计时的结束时间，单位秒。为0表示没有开启倒计时
+}
+
+// 玩家坐下广播
+// MessageType: COMMON_SIT_DOWN_BROADCAST
+message SitDownBroadcast {
+  int64 bc_uid = 3;
+  int64 user_id = 1;
+  PlayerInfo player = 2;
+  int64 wait_ready_expired_time = 4; // 等待玩家准备倒计时的结束时间，单位秒。为0表示没有开启倒计时
+}
+
+// 玩家站起请求
+// MessageType: COMMON_PLAYER_STAND_UP_REQ
+message PlayerStandUpReq {
+}
+
+// 玩家站起返回
+// MessageType: COMMON_PLAYER_STAND_UP_RES
+message PlayerStandUpRes {
+}
+
+// 玩家站起广播
+// MessageType: COMMON_STAND_UP_BROADCAST
+message StandUpBroadcast {
+  int64 bc_uid = 3;
+  int64 user_id = 1;
+  PlayerInfo player = 2;
+}
+
+// 玩家准备游戏请求
+// MessageType: COMMON_PLAYER_READY_GAME_REQ
+message PlayerReadyGameReq {
+  bool ready = 1;
+}
+
+// 玩家准备游戏返回
+// MessageType: COMMON_PLAYER_READY_GAME_RES
+message PlayerReadyGameRes {
+  bool ready = 1;
+  int64 wait_ready_expired_time = 2; // 等待玩家准备倒计时的结束时间，单位秒。为0表示没有开启倒计时
+}
+
+// 玩家准备广播
+// MessageType: COMMON_READY_BROADCAST
+message ReadyBroadcast {
+  int64 bc_uid = 4;
+  int64 user_id = 1;
+  PlayerInfo player = 2;
+  bool is_ready = 3;
+  int64 wait_ready_expired_time = 5; // 等待玩家准备倒计时的结束时间，单位秒。为0表示没有开启倒计时
+}
+
+// 玩家信息变化通用类，以后有玩家信息变化直接加字段，有值就是有变化，没值会返回类型默认值
+// MessageType: COMMON_USER_UPDATE_BROADCAST
+message UserInfoUpdateBroadcast {
+  int64 user_id = 1;
+  int64 coins = 2;
+}
+
+// 玩家设置请求
+// MessageType: COMMON_PLAYER_SETTINGS_REQ
+message PlayerSettingsReq {
+  PlayerSettings settings = 1;
+}
+
+// 玩家设置响应
+// MessageType: COMMON_PLAYER_SETTINGS_RES
+message PlayerSettingsRes {
+}
+
+
+// 获取玩家历史记录概要请求
+// MessageType: COMMON_GET_HISTORY_SUMMARY_REQ
+message GetHistorySummaryReq {
+  int64 user_id = 1; // 用户ID
+  int32 game_id = 2; // 游戏ID
+  int64 start_time = 3; // 开始时间，Unix时间戳（秒）
+  int64 end_time = 4; // 结束时间，Unix时间戳（秒）
+}
+
+// 获取玩家历史记录概要响应
+// MessageType: COMMON_GET_HISTORY_SUMMARY_RES
+message GetHistorySummaryRes {
+  repeated HistoryDateSummary date_summaries = 1; // 有数据的日期列表，按日期升序排列
+}
+
+// 历史记录日期概要
+message HistoryDateSummary {
+  int32 date = 1; // 日期，格式: YYYYMMDD，例如 20231225
+}

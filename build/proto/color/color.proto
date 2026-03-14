@@ -1,0 +1,208 @@
+syntax = "proto3";
+
+package color.v1;
+
+import "../common/game_common_room.proto";
+
+option go_package = "HeronGame/api/color/v1/pb;pb";
+
+// color游戏配置信息
+message ColorGameConfig {
+  repeated int32 bet_list = 1;              // 下注列表
+}
+
+// color玩家信息
+message ColorPlayerInfo {
+  common.v1.PlayerInfo player_info = 1;     // 玩家信息
+  repeated BetInfo bet_infos = 2;           // 玩家在每个颜色的打码信息
+}
+
+// 打码信息
+message BetInfo {
+  int32 area = 1;                           // 颜色区
+  int32 bet_amount = 2;                     // 打码量
+  int32 odds = 3;                           // 赔率
+  int32 payout_amount =4;                   // 赔付金额
+}
+message DoubleUpBetInfo {
+  int32 bet_amount = 1;                     // color 赢的部分打码金额固定
+  int32 payout_amount =2;                   // 参与Double Up Bonus的打码金额赢的时候的更新为2倍
+  string game_code = 3;                     // 游戏局号
+  int32 bonus_seq = 4;                      // Double Up Bonus 序号
+  int32 base_payout_amount = 5;                // color的payout固定值 在最后输了的时候用这个值计算
+  int64 base_start_time = 6;                 // baseGame开始时间
+}
+
+// 结算玩家信息
+message SettlePlayer {
+  int64 player_id = 1;                      // 玩家id
+  repeated BetInfo win_infos = 2;           // 每个颜色区的赢的金额
+}
+
+// 游戏信息
+message GameInfo {
+  int32 status = 1;                         // 游戏状态 0 等待开始 1.打码中 2.骰子掉落 3.结算
+  int64 status_end_time = 2;                // 状态结束时间
+  string round_num = 3;                     // 牌局号
+  repeated int32 scores = 4;                // 币值列表
+  repeated BetInfo bet_infos = 5;           // 每个颜色区的打码信息
+  repeated int32 dice_infos = 6;            // 骰子信息
+  repeated SettlePlayer settle_players = 7; // 结算玩家列表
+  repeated int32 player_bet_limit=8;                 // 玩家打码上限
+}
+
+// 进入房间请求
+// MessageType: COLOR_JOIN_ROOM_REQ
+message JoinRoomReq {
+  int64 room_id = 1;
+}
+
+// 进入房间响应
+// MessageType: COLOR_JOIN_ROOM_RES
+message JoinRoomRes {
+  common.v1.RoomInfo room_info = 1;          // 房间信息
+  GameInfo game_info = 2;                    // 游戏信息
+  int32 players_count = 3;                   // 房间内所有玩家数量
+  repeated ColorPlayerInfo players = 4;      // 所有玩家信息
+  ColorPlayerInfo self = 5;                  // 玩家自己的信息
+  common.v1.PlayerSettings player_settings = 6; // 玩家设置
+}
+
+// 开始游戏请求
+// MessageType: COLOR_START_GAME_REQ
+message StartGameReq {}
+
+// 开始游戏响应
+// MessageType: COLOR_START_GAME_RES
+message StartGameRes {}
+
+// 游戏状态变化广播
+// MessageType: COLOR_GAME_STATE_CHANGE_BROADCAST
+message GameStateChangeBroadcast {
+  GameInfo game_info = 1;                    // 游戏信息
+}
+
+// 打码请求
+// MessageType: COLOR_PLAYER_BET_REQ
+message BetReq {
+  repeated BetInfo bet_infos = 1;            // 打码请求列表
+}
+
+// 打码响应
+// MessageType: COLOR_PLAYER_BET_RES
+message BetRes {}
+
+// 打码广播
+// MessageType: COLOR_PLAYER_BET_BROADCAST
+message BetBroadcast {
+  ColorPlayerInfo bet_player = 1;              // 打码玩家信息
+  repeated BetInfo bet_infos = 2;              // 打码请求列表
+  string round_num = 3;
+}
+
+// 撤销打码
+// MessageType: COLOR_PLAYER_CANCEL_BET_REQ
+message CancelBetReq {}
+
+// 撤销打码响应
+// MessageType: COLOR_PLAYER_CANCEL_BET_RES
+message CancelBetRes {}
+
+// 撤销打码广播
+// MessageType: COLOR_PLAYER_CANCEL_BET_BROADCAST
+message CancelBetBroadcast {
+  ColorPlayerInfo bet_player = 1;              //撤销打码玩家信息
+  repeated BetInfo bet_infos = 2;              //撤销打码请求列表
+}
+// 获取骰子统计信息
+// MessageType: COLOR_GET_DICE_STATS_REQ
+message GetDiceStatsReq {
+}
+
+message DiceResult {
+  repeated int32 dice = 1;  // 骰子点数(1-6)
+  map<int32, int32> odds = 2; // 各点数对应的赔付倍数
+  int64 timestamp = 3; // 时间戳
+}
+// 获取骰子统计信息响应
+// MessageType: COLOR_GET_DICE_STATS_RES
+message GetDiceStatsRes {
+  map<int32, int32> dice_probabilities = 1; // 各点数出现概率(百分比)
+  repeated DiceResult recent_results = 2;    // 最近8次结果
+}
+//获取玩家EColor游戏历史记录请求
+// MessageType: COLOR_GET_PLAYER_HISTORY_REQ
+message GetColorPlayerHistoryReq{
+  int64 start_time = 1;
+  int64 end_time = 2;
+  int32 page_size = 3;
+}
+
+
+
+//玩家EColor游戏历史记录
+message ColorPlayerHistory{
+  //Game Code
+  string game_code=1;
+  //Time
+  int64 end_time=2;
+  //Game Result
+  repeated int32 dice_infos=3;
+  //Colors Cost Reward
+  repeated BetInfo bet_infos = 4;
+  //Total Cost
+  int32 cost=5;
+  //Total Reward
+  int32 reward=6;
+  // Win/Lost
+  int32 result=7;
+  //Double Up Bonus 信息
+  repeated EcolorBonusPlayerDetail ecolor_bonus_player_detail = 8;
+}
+message EcolorBonusPlayerDetail {
+  int64 user_id = 1 [json_name = "user_id"]; // 玩家id
+  int32 bonus_result = 2 [json_name = "bonus_result"]; // bonus结果 1:成功 2：失败
+  int64 bet_amount = 3 [json_name = "bet_amount"]; // 参与bonus的打码值
+  int64 payout_amount = 4 [json_name = "payout_amount"]; // bonus的输赢
+  int32 card_result = 5 [json_name = "card_result"]; // 本次double up bonus结果 1-52卡牌数字
+}
+//获取玩家EColor游戏历史记录响应
+// MessageType: COLOR_GET_PLAYER_HISTORY_RES
+message GetColorPlayerHistoryRes{
+  repeated ColorPlayerHistory color_player_history = 1;
+}
+//获取赢的玩家的Double Up Bonus信息请求
+// MessageType: COLOR_GET_PLAYER_DOUBLE_UP_BONUS_INFO_REQ
+message GetWinnerDoubleUpBonusInfoReq{
+}
+//获取赢的玩家的Double Up Bonus信息响应
+// MessageType: COLOR_GET_PLAYER_DOUBLE_UP_BONUS_INFO_RES
+message GetWinnerDoubleUpBonusInfoRes{
+  //玩家打码金额
+  int64 bet_amount=1;
+  //赔付玩家金额
+  int64 pay_out_amount=2;
+  //Double Up Bonus win金额
+  int64 double_up_bonus_win_amount=3;
+}
+
+//Play Double Up Bonus 请求
+// MessageType: COLOR_PLAY_DOUBLE_UP_BONUS_REQ
+message PlayDoubleUpBonusReq{
+  //选牌 1 红 2黑
+  int32 card_color=1;
+}
+//Play Double Up Bonus 响应
+// MessageType: COLOR_PLAY_DOUBLE_UP_BONUS_RES
+message PlayDoubleUpBonusRes{
+  //结果1赢 2输
+  int32 result=1;
+  //52张牌
+  int32 card=2;
+  //玩家打码金额
+  int64 bet_amount=3;
+  //赔付玩家金额
+  int64 pay_out_amount=4;
+  //Double Up Bonus win金额
+  int64 double_up_bonus_win_amount=5;
+}

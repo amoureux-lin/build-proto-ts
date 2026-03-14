@@ -1,0 +1,6 @@
+{
+  "main": "dist/sea-main.cjs",
+  "mainFormat": "commonjs",
+  "output": "dist/buildProtoJs.exe",
+  "disableExperimentalSEAWarning": true
+}

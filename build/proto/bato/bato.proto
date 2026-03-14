@@ -1,0 +1,150 @@
+syntax = "proto3";
+
+package bato.v1;
+
+option go_package = "HeronGame/api/bato/v1/pb;pb";
+import "../common/game_common_room.proto";
+
+// 空消息
+message EmptyRes {}
+
+
+// 进入房间请求
+// MessageType: BATO_JOIN_ROOM_REQ (2501)
+message JoinRoomReq {
+  int64 room_id = 1;
+}
+
+// 进入房间响应
+// MessageType: BATO_JOIN_ROOM_RES (2502)
+message JoinRoomRes {
+  RoomInfo room_info = 1; // 房间信息
+  repeated  BatoPayerInfo players = 2;
+  repeated  common.v1.PlayerInfo  watchers = 3; // 旁观者信息
+  int32 players_count = 4; // 旁观者数量
+  repeated common.v1.PlayerInfo speakers = 5; // 开麦用户列表
+  BatoPayerInfo self = 6; // 自己信息
+  GameInfo game_info = 7; // 游戏信息
+  common.v1.PlayerSettings player_settings = 8; // 玩家设置
+}
+
+// 房主开始游戏
+// MessageType: BATO_ROOM_OWNER_START_GAME_REQ (2505)
+message  StartGameReq {}
+
+// 房主开始游戏响应
+// MessageType: BATO_ROOM_OWNER_START_GAME_RES (2506)
+message  StartGameRes {}
+
+// 出牌请求
+// MessageType: BATO_SELECT_CARD_REQ (2509)
+message SelectCardReq {
+  int32 card_id = 1; // 选择的牌id  数组下标
+}
+
+// 出牌响应
+// MessageType: BATO_SELECT_CARD_RES (2510)
+message SelectCardRes {
+  int32 card_id = 1; // 选择的牌id  数组下标
+}
+
+// 游戏开始广播
+// MessageType: BATO_START_GAME_BROADCAST (2511)
+message StartGameBroadcast {
+  int64 user_id = 1; //
+  repeated BatoPayerInfo players = 2; // 游玩玩具信息
+  GameInfo game_info = 3; // 游戏信息
+}
+
+// 结算通知广播
+// MessageType: BATO_GAME_RESULT_BROADCAST (2512)
+message  GameResultBroadcast {
+  int64 user_id = 1; //
+  GameResult game_result = 2; // 游戏结果
+}
+
+// 房间重置广播
+// MessageType: BATO_ROOM_RESET_BROADCAST (2513)
+message RoomResetBroadcast {
+  repeated BatoPayerInfo players = 1;
+  BatoPayerInfo self = 2; // 自己信息
+  GameInfo game_info = 3; // 游戏信息
+  int64 user_id = 4; // 通知玩家id
+}
+
+// 游戏阶段变动通知
+// MessageType: BATO_GAME_STAGE_CHANGE_BROADCAST (2514)
+message GameStageChangeBroadcast {
+  repeated BatoPayerInfo players = 1; // 游玩玩家信息
+  GameInfo game_info = 2; // 游戏信息
+  int64 user_id = 3; // 通知玩家id
+}
+
+// 选牌通知
+// MessageType: BATO_SELECT_CARD_BROADCAST (2515)
+message SelectCardBroadcast {
+  int64 player_id = 1; // 出牌玩家id
+  int32 card_id = 2; // 选择的牌id  数组下标
+  int64 user_id = 3; // 通知玩家id
+}
+
+
+message RoomInfo {
+  int64 room_id = 1;
+  string room_name = 2;
+  int32 room_status = 3; // 房间状态 0 空房间 1 等待中 2 开始游戏 3 游戏结束
+  int32 max_seat = 4; // 最大座位数
+}
+
+
+//玩家信息
+message BatoPayerInfo {
+  common.v1.PlayerInfo player_info = 1; // 玩家信息
+  repeated int32 cards = 2; // 手牌数组   1 石头 2 剪刀 3 布
+  int32 hp = 3; // 生命值
+  int32 win_count = 4; // 胜利次数
+  int32 card_value = 5; // 当前自身出的牌 1 石头 2 剪刀 3 布 0 未出这个别放玩家身上
+}
+
+message GameInfo {
+  int32 round = 1; // 回合数
+  int32 round_winner = 2; // 回合赢家
+  int32 deduction_hp = 3; //扣血 配合回合赢家使用 不需要可以移除
+  int32 stage = 4; // 阶段 1 出牌阶段 2 结算阶段
+  int32 countdown = 5; // 倒计时 单位秒 本回合到下个阶段的时间  每个阶段都会变 游戏结束直接跳过
+  int32 bet_amount = 6; // 当前下注币值
+  repeated int32 scores = 7; // 币值列表
+}
+
+message GameResult {
+  repeated BatoPayerInfo players = 1; // 玩家变化
+  int32 winner_id = 2; // 获胜者id
+  // 后续补充
+}
+
+// 获取玩家历史记录请求
+// MessageType: BATO_GET_PLAYER_HISTORY_REQ
+message GetPlayerHistoryReq {
+  int32 page = 1; // 页数，默认第一页
+  int64 start_time = 2; // 开始时间（Unix时间戳），默认当天开始
+  int64 end_time = 3; // 结束时间（Unix时间戳），默认当天结束
+}
+
+// 获取玩家历史记录响应
+// MessageType: BATO_GET_PLAYER_HISTORY_RES
+message GetPlayerHistoryRes {
+  repeated PlayerHistory record=1;
+}
+message PlayerHistory {
+  int64 user_id = 1;
+  int64 time = 2;
+  int64 cost=3;
+  int64 reward=4;
+  repeated BatoResult results = 5;
+  string game_code=6;
+}
+message BatoResult {
+  int32 round = 1;
+  int32 result = 2;
+  int32 card = 3;
+}

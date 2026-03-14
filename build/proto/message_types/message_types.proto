@@ -1,0 +1,275 @@
+syntax = "proto3";
+
+package common.v1;
+option go_package = "HeronGame/api/common/v1/pb;pb";
+
+// MessageType 消息类型枚举
+enum MessageType {
+  MESSAGE_TYPE_UNSPECIFIED = 0;
+
+  // 网关基础消息 [1-99]
+  GATEWAY_CONNECTED = 1;                   // 连接成功
+  GATEWAY_PING_REQ = 2;                    // Ping消息（心跳+延迟测量）
+  GATEWAY_PONG_RES = 3;                    // Pong响应（心跳确认+延迟信息）
+  GATEWAY_TEST = 4;                        // 测试消息
+
+  //游戏公共消息 [100-199]
+  COMMON_OFFLINE_BROADCAST = 100;           //离线广播通知
+  COMMON_JOIN_ROOM_BROADCAST = 101;         //加入房间广播
+  COMMON_LEAVE_ROOM_BROADCAST = 102;        //离开房间广播
+  COMMON_SIT_DOWN_BROADCAST = 103;          //坐下广播
+  COMMON_STAND_UP_BROADCAST = 104;          //站起广播
+  COMMON_READY_BROADCAST = 105;             //准备广播
+  COMMON_PLAYER_EXIT_ROOM_REQ = 106;        //玩家退出房间请求
+  COMMON_PLAYER_EXIT_ROOM_RES = 107;        //玩家退出房间响应
+  COMMON_PLAYER_OFFLINE = 108;              //玩家离线,用于通知每个微服务
+  // 房间弹幕消息 [109-150]
+  COMMON_SEND_BARRAGE_REQ = 109;            //发送弹幕请求
+  COMMON_SEND_BARRAGE_RES = 110;            //发送弹幕响应
+  COMMON_SEND_BARRAGE_BROADCAST = 111;      //发送弹幕广播
+  COMMON_USER_UPDATE_BROADCAST = 112;       //用户信息变化广播
+  COMMON_SERVER_CLOSED_BROADCAST = 113;     //服务器维护中广播
+
+  // 房间玩家消息 [151-300]
+  COMMON_PLAYER_SIT_DOWN_REQ = 151;         //玩家坐下请求
+  COMMON_PLAYER_SIT_DOWN_RES = 152;         //玩家坐下响应
+  COMMON_PLAYER_STAND_UP_REQ = 153;         //玩家站起请求
+  COMMON_PLAYER_STAND_UP_RES = 154;         //玩家站起响应
+  COMMON_PLAYER_READY_GAME_REQ = 155;       //玩家准备游戏请求
+  COMMON_PLAYER_READY_GAME_RES = 156;       //玩家准备游戏响应
+  COMMON_WAIT_READY_EXPIRED_TIME_BROADCAST = 157; //开启等待玩家准备倒计时广播
+  COMMON_GET_HISTORY_SUMMARY_REQ = 158; //获取玩家历史记录概要请求
+  COMMON_GET_HISTORY_SUMMARY_RES = 159; //获取玩家历史记录概要响应
+  COMMON_PLAYER_SETTINGS_REQ = 160; //玩家设置请求
+  COMMON_PLAYER_SETTINGS_RES = 161; //玩家设置响应
+
+  // 房间消息 [201-300]
+  COMMON_ROOM_NEW_OWNER_BROADCAST = 201;    //房间新房主广播
+  ROOM_SET_ROOM_MODE_REQ = 202;          //设置房间模式请求
+  ROOM_SET_ROOM_MODE_RES = 203;          //设置房间模式响应
+  ROOM_SET_ROOM_MODE_BROADCAST = 204;    //设置房间模式广播
+  ROOM_OWNER_KICK_OUT_OF_ROOM_REQ = 205;      //房主把人踢出房间请求
+  ROOM_OWNER_KICK_OUT_OF_ROOM_RES = 206;      //房主把人踢出房间响应
+  ROOM_OWNER_KICK_OUT_OF_ROOM_BROADCAST = 207; //房主把人踢出房间广播
+  ROOM_OWNER_KICK_OFF_SEAT_REQ = 208;         //房主踢人下座请求
+  ROOM_OWNER_KICK_OFF_SEAT_RES = 209;         //房主踢人下座响应
+  ROOM_OWNER_KICK_OFF_SEAT_BROADCAST = 210;   //房主踢人下座广播
+  ROOM_OWNER_CHANGE_SCORE_REQ = 211;         //房主改变底分请求
+  ROOM_OWNER_CHANGE_SCORE_RES = 212;         //房主改变底分响应
+  ROOM_OWNER_CHANGE_SCORE_BROADCAST = 213;   //房主改变底分广播
+
+  // 房间麦克风消息 [301-350]
+  ROOM_APPLY_ALLOW_MIC_REQ = 301;         //申请开麦请求
+  ROOM_APPLY_ALLOW_MIC_RES = 302;         //申请开麦响应
+  ROOM_APPLY_ALLOW_MIC_BROADCAST = 303;  //申请开麦广播
+  ROOM_APPROVE_ALLOW_MIC_REQ = 304;       //批准开麦请求
+  ROOM_APPROVE_ALLOW_MIC_RES = 305;       //批准开麦响应
+  ROOM_APPROVE_ALLOW_MIC_BROADCAST = 306; //批准开麦广播
+  ROOM_OPEN_MIC_REQ = 307;                //开麦请求
+  ROOM_OPEN_MIC_RES = 308;                //开麦响应
+  ROOM_OPEN_MIC_BROADCAST = 309;          //开麦广播
+  ROOM_ALLOW_MIC_REQ = 310;                //房主邀请上下麦请求
+  ROOM_ALLOW_MIC_RES = 311;                //房主邀请上下麦响应
+  ROOM_ALLOW_MIC_BROADCAST = 312;          //房主邀请上下麦广播
+  ROOM_APPLY_ALLOW_MIC_LIST_REQ = 313;    //申请开麦列表请求
+  ROOM_APPLY_ALLOW_MIC_LIST_RES = 314;    //申请开麦列表响应
+  ROOM_PLAYER_LIST_REQ = 315;             //玩家列表请求
+  ROOM_PLAYER_LIST_RES = 316;             //玩家列表响应
+  ROOM_OWNER_CLOSE_MIC_REQ = 317;         //房主关闭麦请求
+  ROOM_OWNER_CLOSE_MIC_RES = 318;         //房主关闭麦响应
+  ROOM_OWNER_CLOSE_MIC_BROADCAST = 319;   //房主关闭麦广播
+  ROOM_ALLOW_MIC_CHANGED_BROADCAST = 320; //用户上下麦广播
+  ROOM_AGREE_ALLOW_MIC_REQ = 321;         //同意房主邀请上麦请求
+  ROOM_AGREE_ALLOW_MIC_RES = 322;         //同意房主邀请上麦响应
+  ROOM_AGREE_ALLOW_MIC_BROADCAST = 323;   //同意房主邀请上麦广播
+
+  //聊天消息类型枚举 [1000-1500]
+  CHAT_JOIN_ROOM_REQ = 1000;                //进入房间请求
+  CHAT_JOIN_ROOM_RES = 1001;                //进入房间响应
+  CHAT_SEND_MSG_REQ = 1002;                 //发送消息请求
+  CHAT_SEND_MSG_RES = 1003;                 //发送消息响应
+  CHAT_MSG_BROADCAST = 1004;                //消息广播
+  CHAT_LEAVE_ROOM_REQ = 1005;               //离开房间请求
+  CHAT_LEAVE_ROOM_RES = 1006;               //离开房间响应
+  CHAT_PRIVATE_MSG_REQ = 1007;              //私信请求
+  CHAT_PRIVATE_MSG_RES = 1008;              //私信响应
+  CHAT_PRIVATE_MSG_BROADCAST = 1009;        //消息广播
+  CHAT_SIT_DOWN_REQ = 1010;                 //玩家坐下请求
+  CHAT_SIT_DOWN_RES = 1011;                 //玩家坐下响应
+  CHAT_STAND_UP_REQ = 1012;                 //玩家站起请求
+  CHAT_STAND_UP_RES = 1013;                 //玩家站起响应
+
+  //接龙游戏消息枚举 [1500-2000]
+  SOLITAIRE_JOIN_ROOM_REQ = 1500;                 // 加入房间请求
+  SOLITAIRE_JOIN_ROOM_RES = 1501;                 // 加入房间响应
+  SOLITAIRE_ROOM_OWNER_START_GAME_REQ = 1504;     // 房主开始游戏请求
+  SOLITAIRE_ROOM_OWNER_START_GAME_RES = 1505;     // 房主开始游戏响应
+  SOLITAIRE_CONNECTOR_CARD_REQ = 1508;            // 接龙卡牌连击请求
+  SOLITAIRE_CONNECTOR_CARD_RES = 1509;            // 接龙卡牌连击响应
+  SOLITAIRE_START_GAME_BROADCAST = 1510;          // 开始游戏广播
+  SOLITAIRE_CONNECTOR_CARD_BROADCAST = 1511;      // 接龙卡牌连击广播
+  SOLITAIRE_CONNECTOR_FINISHED_BROADCAST = 1512;  // 接龙结束广播
+  SOLITAIRE_GAME_RESULT_BROADCAST = 1513;         // 结算通知广播
+  SOLITAIRE_ROOM_RESET_BROADCAST = 1514;          // 房间重置广播
+  SOLITAIRE_VIEW_CHANGE_BROADCAST = 1517;        // 视角变化广播
+  SOLITAIRE_GET_PLAYER_HISTORY_REQ = 1518;       // 获取玩家历史记录请求
+  SOLITAIRE_GET_PLAYER_HISTORY_RES = 1519;       // 获取玩家历史记录响应
+
+  // 扫雷游戏消息枚举 [2001-2500]
+  MINES_JOIN_ROOM_REQ = 2001;                //进入房间请求
+  MINES_JOIN_ROOM_RES = 2002;                //进入房间响应
+  MINES_START_GAME_BROADCAST = 2011;         //开始游戏广播(全员广播)
+  MINES_OPEN_CELL_REQ = 2012;                //翻开格子请求
+  MINES_OPEN_CELL_RES = 2013;                //翻开格子响应
+  MINES_OPEN_CELL_BROADCAST = 2014;          //翻开格子广播
+  MINES_BAG_IN_REQ = 2015;                   //落袋为安请求
+  MINES_BAG_IN_RES = 2016;                   //落袋为安响应
+  MINES_BAG_IN_BROADCAST = 2017;             //落袋为安广播
+  MINES_PRIZE_BROADCAST = 2018;             //游戏结算广播(全员广播)
+  MINES_CHANGE_VIEW_REQ = 2019;              //切换视角请求
+  MINES_CHANGE_VIEW_RES = 2020;              //切换视角响应
+  MINES_END_GAME_REQ = 2021;                //结束游戏请求
+  MINES_END_GAME_RES = 2022;                //结束游戏响应
+  MINES_END_GAME_BROADCAST = 2023;           //游戏结束广播（全员广播）
+  MINES_DEAD_BROADCAST = 2024;               //死亡广播（全员广播）
+  MINES_START_GAME_REQ = 2025;               //开始游戏请求
+  MINES_START_GAME_RES = 2026;               //开始游戏响应
+  MINES_NEW_BET_RATES_BROADCAST = 2027;      //新倍率广播
+
+  MINES_GET_PLAYER_HISTORY_REQ = 2029;       //获取玩家历史记录请求
+  MINES_GET_PLAYER_HISTORY_RES = 2030;       //获取玩家历史记录响应
+
+  // 猜拳游戏 [2501-3000]
+  BATO_JOIN_ROOM_REQ = 2501;                 // 加入房间请求
+  BATO_JOIN_ROOM_RES = 2502;                 // 加入房间响应
+  BATO_ROOM_OWNER_START_GAME_REQ = 2505;     // 房主开始游戏请求
+  BATO_ROOM_OWNER_START_GAME_RES = 2506;     // 房主开始游戏响应
+  BATO_SELECT_CARD_REQ = 2509;               // 选择牌请求
+  BATO_SELECT_CARD_RES = 2510;               // 选择牌响应
+  BATO_START_GAME_BROADCAST = 2511;         // 开始游戏广播
+  BATO_GAME_RESULT_BROADCAST = 2512;         // 结算通知广播
+  BATO_ROOM_RESET_BROADCAST = 2513;          // 房间重置广播
+  BATO_GAME_STAGE_CHANGE_BROADCAST = 2514;  // 阶段变化广播
+  BATO_SELECT_CARD_BROADCAST = 2515;        // 选择牌广播
+  BATO_GET_PLAYER_HISTORY_REQ = 2516;        // 获取玩家历史记录请求
+  BATO_GET_PLAYER_HISTORY_RES = 2517;       // 获取玩家历史记录响应
+
+  // Tongits游戏 [3001-3500]
+  TONGITS_JOIN_ROOM_REQ = 3001;             // 加入房间请求
+  TONGITS_JOIN_ROOM_RES = 3002;             // 加入房间响应
+  TONGITS_DRAW_REQ = 3003;                  // 抽牌请求
+  TONGITS_DRAW_RES = 3004;                  // 抽牌响应
+  TONGITS_MELD_REQ = 3005;                  // 出牌请求
+  TONGITS_MELD_RES = 3006;                  // 出牌响应
+  TONGITS_LAYOFF_REQ = 3007;                // 压牌请求
+  TONGITS_LAYOFF_RES = 3008;                // 压牌响应
+  TONGITS_DISCARD_REQ = 3009;               // 打牌请求
+  TONGITS_DISCARD_RES = 3010;               // 弃牌响应
+  TONGITS_TAKE_REQ = 3011;                  // 吃牌请求
+  TONGITS_TAKE_RES = 3012;                  // 吃牌响应
+  TONGITS_CHALLENGE_ACTION_REQ = 3013;      // 挑战动作请求
+  TONGITS_CHALLENGE_ACTION_RES = 3014;      // 挑战动作响应
+  TONGITS_START_GAME_BROADCAST = 3015;      // 开始游戏广播
+  TONGITS_GAME_RESULT_BROADCAST = 3016;     // 结算通知广播
+  TONGITS_ROOM_RESET_BROADCAST = 3017;      // 房间重置广播
+  TONGITS_ACTION_CHANGE_BROADCAST = 3018;   // 操作变化广播
+  TONGITS_ROOM_OWNER_START_GAME_REQ = 3019; // 房主开始游戏请求
+  TONGITS_ROOM_OWNER_START_GAME_RES = 3020; // 房主开始游戏响应
+  TONGITS_DRAW_BROADCAST = 3021;             // 抽牌广播
+  TONGITS_MELD_BROADCAST = 3022;             // 出牌广播
+  TONGITS_LAYOFF_BROADCAST = 3023;           // 压牌广播
+  TONGITS_DISCARD_BROADCAST = 3024;          // 打牌广播
+  TONGITS_TAKE_BROADCAST = 3025;             // 吃牌广播
+  TONGITS_CHALLENGE_BROADCAST = 3026;        // 挑战广播
+  TONGITS_PK_BROADCAST = 3027;               // PK广播
+  TONGITS_GAME_WIN_BROADCAST = 3028;         //   胜利广播
+  TONGITS_GAME_RESULT_DETAILS_REQ = 3029;     // 结算详情请求
+  TONGITS_GAME_RESULT_DETAILS_RES = 3030;     // 结算详情响应
+  TONGITS_WIN_CLICK_REQ = 3031;               // 点击获胜请求
+  TONGITS_WIN_CLICK_RES = 3032;               // 点击获胜响应
+  TONGITS_GET_PLAYER_HISTORY_REQ = 3033;             // 获取玩家历史记录请求
+  TONGITS_GET_PLAYER_HISTORY_RES = 3034;             // 获取玩家历史记录响应
+
+  // 木头人游戏 [3501-4000]
+  UNLEASH_JOIN_ROOM_REQ = 3501;              // 加入房间请求
+  UNLEASH_JOIN_ROOM_RES = 3502;              // 加入房间响应
+  UNLEASH_START_GAME_REQ = 3503;             // 开始游戏请求
+  UNLEASH_START_GAME_RES = 3504;             // 开始游戏响应
+  UNLEASH_START_GAME_BROADCAST = 3505;       // 开始游戏广播
+  UNLEASH_RESET_GAME_REQ = 3506;             // 结算完成后重置游戏请求
+  UNLEASH_RESET_GAME_RES = 3507;             // 结算完成后重置游戏响应
+  UNLEASH_RESET_GAME_BROADCAST = 3508;      // 结算完成后重置游戏广播
+  UNLEASH_NEXT_STEP_BROADCAST = 3509;       // 下一阶段安全开跑广播(全员广播)
+  UNLEASH_RUN_REQ = 3510;                    // 开跑请求
+  UNLEASH_RUN_RES = 3511;                    // 开跑响应
+  UNLEASH_RUN_BROADCAST = 3512;             // 开跑广播
+  UNLEASH_HALT_REQ = 3513;                   // 站住请求
+  UNLEASH_HALT_RES = 3514;                   // 站住响应
+  UNLEASH_HALT_BROADCAST = 3515;             // 站住广播
+  UNLEASH_DEAD_BROADCAST = 3516;             // 被娃娃打死失败广播(全员广播)
+  UNLEASH_WIN_BROADCAST = 3517;              // 获胜广播(全员广播)
+  UNLEASH_PRIZE_BROADCAST = 3518;            // 游戏结算广播(全员广播)
+  UNLEASH_WARN_BROADCAST = 3519;             // 娃娃警告广播(全员广播)
+  UNLEASH_FIRST_RUN_BROADCAST = 3520;       // 第一次开跑广播(全员广播)
+  UNLEASH_STEP_PAUSE_BROADCAST = 3521;       // 娃娃转头完成广播(全员广播)
+  UNLEASH_GET_PLAYER_HISTORY_REQ = 3522;             // 获取玩家EColor游戏历史记录请求
+  UNLEASH_GET_PLAYER_HISTORY_RES = 3523;             // 获取玩家EColor游戏历史记录响应
+
+  // color游戏 [4001-4500]
+  COLOR_JOIN_ROOM_REQ = 4001;                 // 加入房间请求
+  COLOR_JOIN_ROOM_RES = 4002;                 // 加入房间响应
+  COLOR_START_GAME_REQ = 4003;                // 开始游戏请求
+  COLOR_START_GAME_RES = 4004;                // 开始游戏响应
+  COLOR_GAME_STATE_CHANGE_BROADCAST = 4005;   // 开始打码广播
+  COLOR_PLAYER_BET_REQ = 4006;                // 打码请求
+  COLOR_PLAYER_BET_RES = 4007;                // 打码响应
+  COLOR_PLAYER_BET_BROADCAST = 4008;          // 打码广播
+  COLOR_PLAYER_CANCEL_BET_REQ = 4009;         // 撤销打码请求
+  COLOR_PLAYER_CANCEL_BET_RES = 4010;         // 撤销打码响应
+  COLOR_PLAYER_CANCEL_BET_BROADCAST = 4011;   // 撤销打码广播
+  COLOR_GET_DICE_STATS_REQ = 4012;             // 获取骰子统计请求
+  COLOR_GET_DICE_STATS_RES = 4013;             // 获取骰子统计响应
+  COLOR_GET_PLAYER_HISTORY_REQ = 4014;             // 获取玩家EColor游戏历史记录请求
+  COLOR_GET_PLAYER_HISTORY_RES = 4015;             // 获取玩家EColor游戏历史记录响应
+  COLOR_GET_PLAYER_DOUBLE_UP_BONUS_INFO_REQ = 4016;    // 获取玩家DOUBLE UP BONUS信息请求
+  COLOR_GET_PLAYER_DOUBLE_UP_BONUS_INFO_RES = 4017;    // 获取玩家DOUBLE UP BONUS信息响应
+  COLOR_PLAY_DOUBLE_UP_BONUS_REQ = 4018;        // 玩DOUBLE UP BONUS请求
+  COLOR_PLAY_DOUBLE_UP_BONUS_RES = 4019;        // 玩DOUBLE UP BONUS响应
+
+  // pusoy游戏 [4501-5000]
+  PUSOY_JOIN_ROOM_REQ = 4501 ; // 加入房间请求
+  PUSOY_JOIN_ROOM_RES = 4502 ; // 加入房间响应
+  PUSOY_ROOM_OWNER_START_GAME_REQ = 4503 ; // 开始游戏请求
+  PUSOY_ROOM_OWNER_START_GAME_RES = 4504 ; // 开始游戏响应
+  PUSOY_START_GAME_BROADCAST = 4505 ; // 开始游戏广播
+  PUSOY_CHANGE_CARDS_REQ = 4506 ; // 换牌请求
+  PUSOY_CHANGE_CARDS_RES = 4507 ; // 换牌响应
+  PUSOY_CHANGE_CARDS_BROADCAST = 4508 ; // 换牌广播
+  PUSOY_READY_REQ = 4509 ; // 准备请求
+  PUSOY_READY_RES = 4510 ; // 准备响应
+  PUSOY_READY_BROADCAST = 4511 ; // 准备广播
+  PUSOY_GAME_RESULT_BROADCAST = 4512 ; // 结算通知广播
+  PUSOY_BET_BROADCAST = 4513 ; // 比牌广播
+  PUSOY_BET_ANIMATION_REQ = 4514 ; // 比牌动画请求
+  PUSOY_BET_ANIMATION_RES = 4515 ; // 比牌动画响应
+  PUSOY_ROOM_RESET_BROADCAST = 4516 ; // 房间重置广播
+  PUSOY_GET_PLAYER_HISTORY_REQ = 4517 ; // 获取玩家历史记录请求
+  PUSOY_GET_PLAYER_HISTORY_RES = 4518 ; // 获取玩家历史记录响应
+  PUSOY_SORT_CARDS_REQ = 4519 ; // 排序牌请求
+  PUSOY_SORT_CARDS_RES = 4520 ; // 排序牌响应
+  PUSOY_SORT_CARDS_BROADCAST = 4521 ; // 排序牌广播
+
+  // texas游戏 [5001-5500]
+  TEXAS_JOIN_ROOM_REQ = 5001; // 加入房间请求
+  TEXAS_JOIN_ROOM_RES = 5002; // 加入房间响应
+  TEXAS_GAME_READY_BROADCAST = 5003; // 游戏即将开始
+  TEXAS_GAME_STAGE_BROADCAST = 5004; // 游戏阶段变动广播
+  TEXAS_PLAYER_ACTION_REQ = 5005; // 玩家操作请求
+  TEXAS_PLAYER_ACTION_RES = 5006; // 玩家操作响应
+  TEXAS_BET_ANIMATION_REQ = 5007; // 比牌阶段动画
+  TEXAS_BET_ANIMATION_RES = 5008; // 比牌阶段动画
+  TEXAS_PLAYER_ACTION_BROADCAST = 5009; // 玩家操作广播
+  TEXAS_GAME_RESULT_BROADCAST = 5010; // 游戏结算广播
+  TEXAS_ROOM_RESET_BROADCAST = 5011; // 房间重置广播
+  TEXAS_GAME_START_BROADCAST = 5012; // 游戏开始广播
+}

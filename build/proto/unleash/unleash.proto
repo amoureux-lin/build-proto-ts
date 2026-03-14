@@ -1,0 +1,215 @@
+syntax = "proto3";
+
+package unleash.v1;
+
+import "../common/game_common_room.proto";
+
+option go_package = "HeronGame/api/unleash/v1/pb;pb";
+
+// 木头人玩家游戏状态
+enum UnleashPlayerStatus {
+  RPS_HALTING = 0; // 站住中
+  RPS_RUNNING = 1; // 开跑中
+  RPS_DEAD = 2; // 被娃娃打死
+  RPS_WIN = 3; // 获胜
+  RPS_LOSE = 4; // 失败
+}
+
+// 木头人游戏客户端配置
+message UnleashConfig {
+  int32 speed = 1; // 奔跑速度 n像素/秒 暂定120像素
+  int32 max_game_duration = 2; // 最大游戏时长/秒
+}
+
+// 游戏信息
+message GameInfo {
+  UnleashConfig config = 1; // 游戏配置
+  int32 status = 2; // 游戏状态 0 等待开始 1 奔跑中 2 暂停(娃娃杀人) 3 胜负已分 4 已派奖
+  int32 bet_amount = 3; // 当前下注币值
+  repeated int32 scores = 4; // 币值列表
+  int64 first_begin_time = 5; // 第一次开跑时间戳/秒
+  int64 step_begin_time = 6; // 本阶段允许开跑时间戳/秒
+  int64 step_pause_time = 7; // 当前娃娃转头完成时间戳/秒
+  int64 winner_id = 8; // 获胜者id。0 表示没有获胜者
+  int64 win_coin = 9; // 获胜者赢取的金币
+  repeated int64 dead_ids = 10; // 死亡者id （选出胜者前已经被打死的玩家）
+  bool step_warned = 11; // 当前阶段是否已警告
+  int64 prize = 12; // 胜者奖金
+  int64 end_game_time = 13; // 游戏结束时间戳/秒
+  int64 first_player_id = 14; // 第一名玩家id
+}
+
+// 参战玩家信息
+message UnleashPlayerInfo {
+  common.v1.PlayerInfo player_info = 1;
+  UnleashPlayerStatus player_status = 2; // 玩家状态
+  int64 player_distance = 3; // 本次开跑时的距离
+}
+
+// 进入房间请求
+// MessageType: UNLEASH_JOIN_ROOM_REQ
+message JoinRoomReq {
+  int64 room_id = 1;
+}
+
+// 进入房间响应
+// MessageType: UNLEASH_JOIN_ROOM_RES
+message JoinRoomRes {
+  common.v1.RoomInfo room_info = 1; // 房间信息
+  GameInfo game_info = 2; // 游戏信息
+  int32 players_count = 3; // 房间内所有玩家数量
+  UnleashPlayerInfo self = 4; // 自己的玩家信息
+  repeated common.v1.PlayerInfo watchers = 5; // 房间内观战玩家列表
+  repeated common.v1.PlayerInfo speakers = 6; // 麦位列表
+  repeated UnleashPlayerInfo players = 7; // 落座玩家列表
+  common.v1.PlayerSettings player_settings = 8; // 玩家设置
+}
+
+// 开始游戏请求
+// MessageType: UNLEASH_START_GAME_REQ
+message StartGameReq {
+}
+
+// 开始游戏响应
+// MessageType: UNLEASH_START_GAME_RES
+message StartGameRes {
+}
+
+// 开始游戏广播(全员广播)
+// MessageType: UNLEASH_START_GAME_BROADCAST
+message StartGameBroadcast {
+  GameInfo game_info = 1; // 游戏信息
+  repeated UnleashPlayerInfo players = 2; // 参战玩家列表
+  int64 step_begin_time = 3; // 本次开跑时间戳/秒
+}
+
+// 娃娃转头完成广播(全员广播)
+// MessageType: UNLEASH_STEP_PAUSE_BROADCAST
+message StepPauseBroadcast {
+}
+
+// 下一阶段安全开跑广播(全员广播)
+// MessageType: UNLEASH_NEXT_STEP_BROADCAST
+message NextStepBroadcast {
+}
+
+// 结算完成后重置游戏请求
+// MessageType: UNLEASH_RESET_GAME_REQ
+message ResetGameReq {
+}
+
+// 结算完成后重置游戏响应
+// MessageType: UNLEASH_RESET_GAME_RES
+message ResetGameRes {
+}
+
+// 结算完成后重置游戏广播（全员广播）重新回到房间界面
+// MessageType: UNLEASH_RESET_GAME_BROADCAST
+message ResetGameBroadcast {
+  GameInfo game_info = 1; // 游戏信息
+  UnleashPlayerInfo self = 2; // 自己的玩家信息
+  repeated UnleashPlayerInfo players = 3; // 参战玩家列表
+}
+
+// 开跑请求
+// MessageType: UNLEASH_RUN_REQ
+message RunReq {
+}
+
+// 开跑响应
+// MessageType: UNLEASH_RUN_RES
+message RunRes {
+  int64 player_distance = 1; // 站住时的距离
+}
+
+// 开跑广播
+// MessageType: UNLEASH_RUN_BROADCAST
+message RunBroadcast {
+  int64 player_id = 1; // 玩家id
+  int64 player_distance = 2; // 站住时的距离
+}
+
+// 站住请求
+// MessageType: UNLEASH_HALT_REQ
+message HaltReq {
+}
+
+// 站住响应
+// MessageType: UNLEASH_HALT_RES
+message HaltRes {
+  int64 player_distance = 1; // 站住时的距离
+}
+
+// 站住广播
+// MessageType: UNLEASH_HALT_BROADCAST
+message HaltBroadcast {
+  int64 player_id = 1; // 玩家id
+  int64 player_distance = 2; // 站住时的距离
+}
+
+// 第一次开跑广播
+// MessageType: UNLEASH_FIRST_RUN_BROADCAST
+message FirstRunBroadcast {
+}
+
+// 警告广播
+// MessageType: UNLEASH_WARN_BROADCAST
+message WarnBroadcast {
+}
+
+// 被娃娃打死失败广播（全员广播）
+// MessageType: UNLEASH_DEAD_BROADCAST
+message DeadBroadcast {
+  repeated UnleashPlayerInfo dead_players = 1; // 死亡玩家列表
+  int64 first_player_id = 2; // 第一名玩家id
+}
+
+// 获胜广播(全员广播)
+// MessageType: UNLEASH_WIN_BROADCAST
+message WinBroadcast {
+  int64 player_id = 1; // 玩家id
+  int64 win_coin = 2; // 获胜者赢取的金币
+  int64 player_distance = 4; // 胜利玩家的奔跑距离
+}
+
+// 游戏结算广播（全员广播）
+// MessageType: UNLEASH_PRIZE_BROADCAST
+message PrizeBroadcast {
+  int64 winer_id = 1; // 获胜者user_id
+  int64 win_coin = 2; // 获胜者赢取的金币
+  int64 win_complete_milliseconds = 5; // 获胜者完成用时/毫秒
+  repeated UnleashPlayerInfo players = 4; // 参战玩家列表
+}
+//获取玩家Unleash游戏历史记录请求
+// MessageType: UNLEASH_GET_PLAYER_HISTORY_REQ
+message GetUnleashPlayerHistoryReq{
+  int64 start_time = 1;
+  int64 end_time = 2;
+  int32 page = 3;
+}
+
+message UnleashPlayerDetail{
+  string rank = 1;
+  string nickname = 2;
+  string percentage = 3;
+  string avatar = 4;
+  bool is_self = 5;
+  int64 user_id = 6;
+}
+
+//玩家Unleash游戏历史记录
+message UnleashPlayerHistory{
+  string game_code= 1;
+  int64 end_time = 2;
+  int32 result = 3;
+  string time_record = 4;
+  int64 cost = 5;
+  int64 reward = 6;
+  repeated UnleashPlayerDetail players = 7;
+}
+
+//获取玩家Unleash游戏历史记录响应
+// MessageType: UNLEASH_GET_PLAYER_HISTORY_RES
+message GetUnleashPlayerHistoryRes{
+  repeated UnleashPlayerHistory unleash_player_history = 1;
+}

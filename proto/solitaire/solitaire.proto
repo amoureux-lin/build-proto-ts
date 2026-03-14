@@ -1,0 +1,191 @@
+syntax = "proto3";
+
+package solitaire.v1;
+
+option go_package = "HeronGame/api/solitaire/v1/pb;pb";
+import "../common/game_common_room.proto";
+// 空消息
+message EmptyRes {}
+
+
+// 进入房间请求
+// MessageType: SOLITAIRE_JOIN_ROOM_REQ (1500)
+message JoinRoomReq {
+  int64 room_id = 1;
+}
+
+// 进入房间响应
+// MessageType: SOLITAIRE_JOIN_ROOM_RES (1501)
+message JoinRoomRes {
+  RoomInfo room_info = 1; // 房间信息
+  repeated  SolitairePayerInfo players = 2;
+  repeated  common.v1.PlayerInfo  watchers = 3; // 旁观者信息
+  int32 players_count = 4; // 旁观者数量
+  repeated common.v1.PlayerInfo speakers = 5; // 开麦用户列表
+  SolitairePayerInfo self = 6; // 自己信息
+  GameInfo game_info = 7; // 游戏信息
+}
+
+
+// 房主开始游戏
+// MessageType: SOLITAIRE_ROOM_OWNER_START_GAME_REQ (1504)
+message  StartGameReq {
+
+}
+
+// 房主开始游戏响应
+// MessageType: SOLITAIRE_ROOM_OWNER_START_GAME_RES (1505)
+message  StartGameRes {
+
+}
+
+// 连牌请求
+// MessageType: SOLITAIRE_CONNECTOR_CARD_REQ (1508)
+message ConnectorCardReq {
+  int32 action_type = 1; // 0 牌桌 1 牌堆
+  int32 card_id = 2; // 牌的索引
+}
+
+// 连牌响应
+// MessageType: SOLITAIRE_CONNECTOR_CARD_RES (1509)
+message ConnectorCardRes {
+  int32 action_type = 1; // 0 牌桌 1 牌堆
+  GameInfo game_info = 2; // 游戏信息
+  int32 card_num = 3; // 牌堆剩余牌数
+}
+
+
+// 游戏开始广播
+// MessageType: SOLITAIRE_START_GAME_BROADCAST (1510)
+message StartGameBroadcast {
+  int64 user_id = 1; //
+  GameInfo game_info = 2; // 游戏信息
+}
+
+
+//连牌广播
+// MessageType: SOLITAIRE_CONNECTOR_CARD_BROADCAST (1511)
+message  ConnectorCardBroadcast {
+  int64 game_user_id = 1; // 发起连牌的玩家id
+  int32 action_type = 2; // 0 牌桌 1 牌堆
+  GameInfo game_info = 3; // 游戏信息
+  int32 card_num = 5; // 牌堆剩余牌数
+  int64 user_id = 4; // 通知的玩家id
+}
+
+// 玩家完成自己游戏
+// MessageType: SOLITAIRE_CONNECTOR_FINISHED_BROADCAST (1512)
+message ConnectorFinishedBroadcast {
+  int64 finished_id = 1; // 胜利玩家id
+  int32 timer = 2; // 时间戳
+  int64 user_id = 3; // 玩家id
+}
+
+
+// 结算通知广播
+// MessageType: SOLITAIRE_GAME_RESULT_BROADCAST (1513)
+message  GameResultBroadcast {
+  int64 user_id = 1; //
+  GameResult game_result = 2; // 游戏结果
+}
+
+// 房间重置广播
+// MessageType: SOLITAIRE_ROOM_RESET_BROADCAST (1514)
+message RoomResetBroadcast {
+  repeated SolitairePayerInfo players = 1;
+  SolitairePayerInfo self = 2; // 自己信息
+  GameInfo game_info = 3; // 游戏信息
+  int64 user_id = 4; // 通知玩家id
+}
+
+
+// 视角切换广播
+// MessageType: SOLITAIRE_VIEW_CHANGE_BROADCAST (1517)
+message ViewChangeBroadcast {
+  SolitairePayerInfo viewPlayer = 1; // 观看玩家信息
+  GameInfo game_info = 2; // 游戏信息
+  int64 user_id = 3; // 通知玩家id
+}
+
+message RoomInfo {
+  int64 room_id = 1;
+  string room_name = 2;
+  int32 room_status = 3; // 房间状态 0 空房间 1 等待中 2 开始游戏 3 游戏结束
+  int32 room_mode = 4; // 房间模式 0: 游戏模式 1: 房主模式
+  int32 max_seat = 5; // 最大座位数
+}
+
+
+//玩家信息
+message SolitairePayerInfo {
+  common.v1.PlayerInfo player_info = 1; // 玩家信息
+  int32 score = 2; // 得分
+  int32 combo = 3; // 连击
+  int32 card_num = 4; // 牌堆剩余牌数
+
+}
+
+message GameInfo {
+  repeated PokerInfo pokers = 1; // 牌局信息  连牌下 为显示牌以及消牌
+  repeated PokerInfo clear_pokers = 2; // 消除的牌
+  int32 head_value = 3; // 手牌数值
+  repeated int32 pool_pokers = 4; // 0 普通牌 999 万能牌
+  int32 state = 5; // 游戏状态 0 游戏中 1 已完成
+  int32 timer = 6; // 时间戳
+  int32 score = 7; // 得分
+  int32 combo = 8; // 连击
+  int32 deduction = 9; //扣分
+  int32 click_id = 10; // 点击的牌的id
+  int32 bet_amount = 11; // 当前下注币值
+  repeated int32 scores = 12; // 币值列表
+  int64 perspective_id = 13; // 视角玩家id
+  int32 change_score = 14; // 当前变化分值
+}
+
+message GameResult {
+  repeated SolitairePayerInfo players = 1; // 玩家变化
+  int32 winner_id = 2; // 获胜者id
+  int32 count = 3; // 消耗牌数
+}
+
+message PokerInfo {
+  int32 id = 1; // 牌的索引
+  int32 value = 2; // 牌的数值
+  repeated int32 covers = 3; // 盖牌索引
+  repeated int32 covered_by = 4; // 被盖牌索引
+  int32 state = 5; // 牌的状态 0 盖牌 1 可点击  2 消除
+  int32 x = 6; // 牌的x坐标
+  int32 y = 7; // 牌的y坐标
+}
+
+
+
+// 获取玩家历史记录请求
+// MessageType: SOLITAIRE_GET_PLAYER_HISTORY_REQ
+message GetPlayerHistoryReq {
+  int32 page = 1; // 页数，默认第一页
+  int64 start_time = 2; // 开始时间（Unix时间戳），默认当天开始
+  int64 end_time = 3; // 结束时间（Unix时间戳），默认当天结束
+}
+
+// 获取玩家历史记录响应
+// MessageType: SOLITAIRE_GET_PLAYER_HISTORY_RES
+message GetPlayerHistoryRes {
+  repeated SolitaireHistoryRecord records = 1; // 历史记录列表
+}
+
+// 单条历史记录
+message SolitaireHistoryRecord {
+  string game_code = 1; // 游戏局号
+  int64 end_time = 2; // 结束时间
+  int64 cost = 3;
+  int64 reward = 4;
+  repeated SolitaireCardInfo cards = 5;
+  int32 score = 6; // 自己分数
+  int32 you_score = 7; // 对方分数
+}
+
+message SolitaireCardInfo{
+  int32 card_id = 1;
+  int32 card_type = 2; // 1 连牌 2 翻牌
+}

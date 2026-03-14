@@ -1,0 +1,371 @@
+syntax = "proto3";
+
+package tongits.v1;
+
+option go_package = "HeronGame/api/tongits/v1/pb;pb";
+import "../common/game_common_room.proto";
+// 空消息
+message EmptyRes {}
+
+// 房间信息
+message RoomInfo {
+  int64 room_id = 1;
+  string room_name = 2;
+  int32 room_status = 3; // 房间状态
+  int32 max_seat = 4;    // 最大座位数
+}
+
+// 玩家在游戏中的完整信息
+message TongitsPlayerInfo {
+  common.v1.PlayerInfo player_info = 1; // 基础玩家信息
+  int32 hand_card_count = 2;              // 手牌数量 (对其他玩家可见)
+  bool is_dealer = 3;                     // 是否是庄家
+  repeated Meld displayed_melds = 4;      // 已经打出的牌组 (明牌)
+  repeated int32 hand_cards = 5;          // 自己的手牌
+  bool is_fight = 6;                     // 是否可以发起挑战
+  int32 countdown = 7;                   // 时间戳
+  int32 change_status = 8;               // 1:默认待选择 2:发起 3:接受 4:拒绝 5:烧死
+  int32 status = 9;                      // 1:不可操作, 2:select, 3:Action
+  bool is_win = 10;                      // 是否赢得比赛
+  int32 card_point = 11;                  // 点数
+}
+
+
+message TongitsBasePlayerInfo {
+  int64 player_id = 1; // 玩家ID
+  int32 change_status = 2; // 1:默认待选择 2:发起 3:接受 4:拒绝 5:烧死
+  int32 countdown = 3; // 剩余时间
+}
+
+// 牌组结构
+message Meld {
+  repeated int32 cards = 1; // 组成牌组的牌
+  int32 highlight_cards = 2; // 高亮的牌 (可见)
+  int64 owner_id = 3;       // 这个牌组属于哪个玩家
+  int32 meld_id = 4;        // 牌组的唯一ID (例如，玩家Melds数组的索引)
+  bool locked = 5;          // 牌组是否锁定 (动画表现)
+}
+
+// 游戏状态的核心信息
+message GameInfo {
+  int64 action_player_id = 1; // 当前操作玩家ID
+  int32 status = 2;             // 游戏阶段 1:初始 2:游戏中  3: 挑战中 4: 结算前  5:结算中
+  int32 deck_card_count = 4;   // 牌堆剩余牌数
+  repeated int32 discard_pile = 6; // 弃牌堆的牌 从下到上
+  PotInfo pot = 7;             // 底池信息
+  int32 discard_card = 8;      // 弃牌显示牌
+  int32 win_type = 9;          // 胜利类型  1 tongits 2 挑战 3 时间结束比大小:
+  int64 perspective_id = 10; // 视角玩家id
+  int32 bet_amount = 11;      // 当前下注币值
+  repeated int32 scores = 12; // 币值列表
+}
+
+// 底池信息
+message PotInfo {
+  int32 base = 1;      // 底池金额
+  int32 win_count = 2; // 连续未被赢取的次数
+  int64 use_id = 3;  // 当前所属玩家id
+}
+
+
+message PlayerResult {
+  TongitsPlayerInfo player_info = 1;
+  int32 sum_win_bonus = 2; // 总输赢获得的钱
+  int32 normal_win_bonus = 3; // 正常输赢获得的钱
+  int32 tongits_win_bonus = 4; // Tongits输赢获得的钱
+  int32 card_type_bonus = 5; // 牌型奖励获得的钱
+  int32 bonus_bonus = 6; // 奖励点 宝牌获得的钱
+  int32 burned_bonus = 7; // 烧牌获得的钱
+  int32 win_challenge_bonus = 8; // 赢得挑战获得的钱
+  int32 pot_bonus = 9; // 底池获得的钱
+  int32 card_point = 10; // 点数
+}
+
+// 进入房间
+// MessageType: TONGITS_JOIN_ROOM_REQ (3001)
+message JoinRoomReq {
+  int64 room_id = 1;
+}
+
+// 进入房间
+// MessageType: TONGITS_JOIN_ROOM_RES (3002)
+message JoinRoomRes {
+  RoomInfo room_info = 1; // 房间信息
+  repeated  TongitsPlayerInfo players = 2;
+  repeated  common.v1.PlayerInfo  watchers = 3; // 旁观者信息
+  int32 players_count = 4; // 旁观者数量
+  repeated common.v1.PlayerInfo speakers = 5; // 开麦用户列表
+  TongitsPlayerInfo self = 6; // 自己信息
+  GameInfo game_info = 7; // 游戏信息
+  common.v1.PlayerSettings player_settings = 8; // 玩家设置
+}
+
+// 开始游戏
+// MessageType: TONGITS_ROOM_OWNER_START_GAME_REQ (3019)
+message StartGameReq {}
+
+// 开始游戏
+// MessageType: TONGITS_ROOM_OWNER_START_GAME_RES (3020)
+message  StartGameRes {
+
+}
+
+
+// 游戏开始广播
+// MessageType: TONGITS_START_GAME_BROADCAST (3015)
+message GameStartBroadcast {
+  GameInfo game_info = 1; // 游戏初始状态
+  repeated TongitsPlayerInfo players = 2; // 座位上的玩家信息
+  int64 user_id = 4;
+}
+
+// tongits 点击请求
+// MessageType: TONGITS_WIN_CLICK_REQ (3031)
+message TongitsReq {}
+
+// tongits 点击响应
+// MessageType: TONGITS_WIN_CLICK_RES (3032)
+message TongitsRes {}
+
+
+
+// 抽牌
+// MessageType: TONGITS_DRAW_REQ (3003)
+message DrawCardReq {}
+
+// 抽牌
+// MessageType: TONGITS_DRAW_RES (3004)
+message DrawCardRes {
+  int32 drawn_card = 1; // 抽到的牌，只有自己知道
+  bool has_tongits = 2; // 是否有Tongits
+  int32 hand_card_count = 3;              // 手牌数量 (对其他玩家可见)
+}
+
+// 抽牌广播
+// MessageType: TONGITS_DRAW_BROADCAST (3021)
+message DrawCardBroadcast {
+  int64 player_id = 1;
+  int64 user_id = 2;
+  int32 drawn_card = 3; // 当自动抽牌时  自己会有这个值
+  int32 hand_card_count = 4;              // 手牌数量 (对其他玩家可见)
+}
+
+// 出牌
+// MessageType: TONGITS_MELD_REQ (3005)
+message MeldCardReq {
+  repeated int32 cards = 1;
+}
+
+// 出牌
+// MessageType: TONGITS_MELD_RES (3006)
+message MeldCardRes {
+  Meld new_meld = 1; // 新打出的牌组
+  bool has_tongits = 2; // 是否有Tongits
+  int32 hand_card_count = 3;              // 手牌数量 (对其他玩家可见)
+}
+
+// 出牌广播
+// MessageType: TONGITS_MELD_BROADCAST (3022)
+message MeldCardBroadcast {
+  int64 player_id = 1;
+  Meld new_meld = 2; // 新打出的牌组
+  int32 hand_card_count = 3;              // 手牌数量 (对其他玩家可见)
+  int64 user_id = 4;
+}
+
+// 补牌/压牌
+// MessageType: TONGITS_LAYOFF_REQ (3007)
+message LayOffCardReq {
+  int32 card = 1;           // 要补的牌
+  int64 target_player_id = 2; // 目标牌组的拥有者ID
+  int32 target_meld_id = 3;   // 目标牌组的ID
+}
+
+// 补牌/压牌
+// MessageType: TONGITS_LAYOFF_RES (3008)
+message LayOffCardRes {
+  int32 card_added = 1;           // 要补的牌
+  int64 target_player_id = 2; // 目标牌组的拥有者ID
+  int32 target_meld_id = 3;   // 目标牌组的ID
+  bool has_tongits = 4; // 是否有Tongits
+  int32 hand_card_count = 5;              // 手牌数量 (对其他玩家可见)
+}
+
+// 补牌/压牌广播
+// MessageType: TONGITS_LAYOFF_BROADCAST (3023)
+message LayOffCardBroadcast {
+  int64 action_player_id = 1; // 操作者
+  int32 card_added = 2;       // 补的牌
+  int64 target_player_id = 3; // 目标玩家
+  int32 target_meld_id = 4;   // 目标牌组
+  int32 hand_card_count = 5;              // 手牌数量 (对其他玩家可见)
+  int64 user_id = 6;
+}
+
+// 打牌
+// MessageType: TONGITS_DISCARD_REQ (3009)
+message DiscardCardReq {
+  int32 card = 1;
+}
+
+// 打牌
+// MessageType: TONGITS_DISCARD_RES (3010)
+message DiscardCardRes {
+  int32 discarded_card = 1;
+  repeated int32 unlock_melds = 2; // 解锁的牌组ID列表
+  int32 hand_card_count = 3;              // 手牌数量 (对其他玩家可见)
+  repeated int32 discard_pile = 5; // 弃牌堆的牌 从下到上
+}
+// 打牌广播
+// MessageType: TONGITS_DISCARD_BROADCAST (3024)
+message DiscardCardBroadcast {
+  int64 player_id = 1;
+  int32 discarded_card = 2;
+  repeated int32 unlock_melds = 3; // 解锁的牌组ID列表
+  int32 hand_card_count = 4;              // 手牌数量 (对其他玩家可见)
+  repeated int32 discard_pile = 5; // 弃牌堆的牌 从下到上
+  int64 user_id = 11;
+}
+
+// 吃牌
+// MessageType: TONGITS_TAKE_REQ (3011)
+message TakeCardReq {
+  repeated int32 cards_from_hand = 1; // 手中用来组合的牌
+}
+
+// 吃牌
+// MessageType: TONGITS_TAKE_RES (3012)
+message TakeCardRes {
+  Meld new_meld = 1; // 吃牌后形成的新牌组
+  bool has_tongits = 2; // 是否有Tongits
+  int32 hand_card_count = 3;              // 手牌数量 (对其他玩家可见)
+  int32 discard = 4;      // 弃牌显示牌
+}
+
+// 吃牌广播
+// MessageType: TONGITS_TAKE_BROADCAST (3025)
+message TakeCardBroadcast {
+  int64 player_id = 1;
+  Meld new_meld = 2; // 吃牌后形成的新牌组
+  int32 hand_card_count = 3;              // 手牌数量 (对其他玩家可见)
+  int32 discard = 4;      // 弃牌显示牌
+  int64 user_id = 5;
+}
+
+// 挑战/pk
+// MessageType: TONGITS_CHALLENGE_ACTION_REQ (3013)
+message ChallengeReq {
+  int32 change_status = 1; //2:发起 3:接受 4:拒绝
+}
+
+// 挑战/pk
+// MessageType: TONGITS_CHALLENGE_ACTION_RES (3014)
+message ChallengeRes {
+  repeated TongitsBasePlayerInfo basePlayers = 1;
+}
+
+// 挑战广播
+// MessageType: TONGITS_CHALLENGE_BROADCAST (3026)
+message ChallengeBroadcast {
+  int64 player_id = 1;
+  repeated TongitsBasePlayerInfo basePlayers = 2;
+  int64 user_id = 4;
+}
+
+// PK广播
+// MessageType: TONGITS_PK_BROADCAST (3027)
+message PKBroadcast {
+  int64 player_id = 1;
+  int32 change_status = 2; //2:发起 3:接受 4:拒绝
+  int64 user_id = 3;
+}
+
+// 游戏结算广播
+// MessageType: TONGITS_GAME_RESULT_BROADCAST (3016)
+message GameResultBroadcast {
+  int64 winner_id = 1;
+  repeated PlayerResult player_results = 2;
+  int32 countdown = 3;                   // 时间戳
+  int64 user_id = 4;
+}
+
+// 房间重置广播
+// MessageType: TONGITS_ROOM_RESET_BROADCAST (3017)
+message RoomResetBroadcast {
+  repeated TongitsPlayerInfo players = 1;
+  TongitsPlayerInfo self = 2; // 自己信息
+  GameInfo game_info = 3; // 游戏信息
+  int64 user_id = 4; // 通知玩家id
+}
+
+
+// 操作变动广播
+// MessageType: TONGITS_ACTION_CHANGE_BROADCAST (3018)
+message ActionChangeBroadcast {
+  int64 action_player_id = 1; // 操作玩家
+  int32 countdown = 2;  // 倒计时
+  bool is_fight = 3; // 是否可以发起挑战
+  int32 status = 4;   // 1:不可操作, 2:select, 3:Action
+  int64 user_id = 11; // 通知玩家id
+}
+
+
+// 结算前比牌 广播
+// MessageType: TONGITS_GAME_WIN_BROADCAST (3028)
+message BeforeResultBroadcast {
+  int64 winner_id = 1;
+  int32 win_type = 2;          // 胜利类型  1 tongits 2 挑战 3 时间结束比大小:
+  repeated TongitsPlayerInfo players = 3;
+  int32 countdown = 4;  // 时间戳
+  PotInfo pot = 5; // 底池信息
+  int64 user_id = 11; // 通知玩家id
+}
+
+// 获取游戏结算详情数据
+// MessageType: TONGITS_GAME_RESULT_DETAILS_REQ (3029)
+message GameResultDetailsReq {
+
+}
+// 获取游戏结算详情数据
+// MessageType: TONGITS_GAME_RESULT_DETAILS_RES (3030)
+message GameResultDetailsRes {
+  int64 winner_id = 1;
+  repeated PlayerResult player_results = 2;
+}
+
+
+// 获取玩家历史记录请求
+// MessageType: TONGITS_GET_PLAYER_HISTORY_REQ
+message GetPlayerHistoryReq {
+  int32 page = 1; // 页数，默认第一页
+  int64 start_time = 2; // 开始时间（Unix时间戳），默认当天开始
+  int64 end_time = 3; // 结束时间（Unix时间戳），默认当天结束
+}
+
+// 获取玩家历史记录响应
+// MessageType: TONGITS_GET_PLAYER_HISTORY_RES
+message GetPlayerHistoryRes {
+  repeated TongitsHistoryRecord records = 1; // 历史记录列表
+}
+
+// 单条历史记录
+message TongitsHistoryRecord {
+  repeated TongitsHistoryInfo players = 1; // 玩家列表
+}
+
+// 每条数据内的tongits对局玩家信息
+message TongitsHistoryInfo {
+  string game_code = 1; // 游戏局号
+  int64 end_time = 2; // 结束时间
+  int64 user_id = 3 ;
+  string nickname = 4;
+  string avatar = 5;
+  int32 profit = 6 ; // 实际扣费
+  int32 score = 7 ; // 手牌点数
+  repeated int32 cards = 8 ; // 剩余手牌
+  int32 game_result = 9 ; // 1 普通赢  2 普通输 3 挑战认输 4 tongits胜利 5 挑战胜利 6 挑战失败 7 接受挑战胜利 8 接受挑战失败 9 烧死
+  int32 cost = 10 ; // 扣费
+  int32 normal_reward = 11 ; // 普通奖励
+  int32 pot_reward = 12 ; // pot池
+  int32 total_reward = 13 ; // 总计
+}

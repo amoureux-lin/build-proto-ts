@@ -1,0 +1,259 @@
+syntax = "proto3";
+
+package mines.v1;
+
+import "../common/game_common_room.proto";
+
+option go_package = "HeronGame/api/mines/v1/pb;pb";
+
+// 格子类型
+enum CellType {
+  CELL_TYPE_UNOPENED = 0; // 未打开
+  CELL_TYPE_COIN = 1; // 金币
+  CELL_TYPE_HURT = 2; // 炸弹伤害
+  CELL_TYPE_SHIELD = 3; // 护盾
+  CELL_TYPE_ATTACK = 4; // 炸弹攻击
+  CELL_TYPE_RADAR = 5; // 雷达
+  CELL_TYPE_RADAR_MARK = 6; // 被雷达标记
+}
+
+// 扫雷游戏静态配置
+message MinesGameConfig {
+  repeated int32 scores = 1; // 底注币值列表
+}
+
+// 游戏客户端配置
+message MinesConfig {
+  reserved 1; // 倍率列表配置。实际倍率*100
+  int32 operation_seconds = 2; // 操作限时(秒)
+  int32 reset_game_seconds = 3; // 重置游戏延迟(秒)
+  int32 coin_win_min_amount = 4; // 金币获胜条件
+  int32 cell_amount = 5; // 格子总数
+  int32 hurt_amount = 6; // 炸弹伤害总数
+  int32 bet_amount = 8; // 当前下注币值
+  repeated int32 scores = 9; // 币值列表
+}
+
+// 房间信息
+message RoomInfo {
+  int64 room_id = 1;
+  string room_name = 2;
+  int32 room_status = 3; // 房间状态 0 空房间 1 等待中 2 开始游戏 3 游戏结束
+  int32 room_mode = 4; // 房间模式 0: 游戏模式 1: 房主模式
+}
+
+// 游戏信息
+message GameInfo {
+  MinesConfig config = 1; // 游戏配置
+  int32 status = 2; // 游戏状态(通用) 0 等待开始 1 进行中 2 暂停 3 已结束
+  map<int64, OpenedCellList> opened_cells = 3; // 游戏玩家们的已打开格子列表。玩家ID -> 已打开的格子列表
+  int64 dead_user_id = 4; // 死亡者user_id。0 表示没有死亡者
+  int64 winner_id = 5; // 获胜者user_id。0 表示没有获胜者
+  int64 win_coin = 6; // 获胜者赢取的金币
+}
+
+// 参战玩家信息
+message MinesPlayer {
+  common.v1.PlayerInfo player_info = 1;
+  int64 current_end_time = 2; // 当前回合结束时间
+  int32 coin_count = 3; // 当前金币数量
+  int32 hurt_count = 4; // 当前炸弹伤害
+  int32 shield_count = 5; // 当前护盾数量
+  int32 be_attacked_count = 6; // 当前被攻击次数
+  repeated int32 bet_rates = 7; // 倍率列表配置。实际倍率*100
+  int32 player_status = 8; // 玩家状态 0 存活中 1 胜利 2 死亡 3 失败
+}
+
+// 每个玩家已打开的格子列表
+message OpenedCellList {
+  map<int64, Cell> cells = 1; // 格子ID -> 格子数据
+}
+
+// 格子信息
+message Cell {
+  int32 cell_id = 1; // 格子ID。由客户端决定，表示界面位置，从1开始
+  CellType cell_type = 2; // 格子类型
+  bool after_dead = 3; // 是否在死亡后打开的
+  int64 rand = 4; // 随机值
+  map<int32, int64> weights = 5; // 权重列表
+}
+
+// 进入房间请求
+// MessageType: MINES_JOIN_ROOM_REQ
+message JoinRoomReq {
+  int64 room_id = 1;
+}
+
+// 进入房间响应
+// MessageType: MINES_JOIN_ROOM_RES
+message JoinRoomRes {
+  RoomInfo room_info = 1; // 房间信息
+  GameInfo game_info = 2; // 游戏信息
+  MinesPlayer self = 3; // 自己的玩家信息
+  repeated common.v1.PlayerInfo watchers = 4; // 房间内观战玩家列表
+  int32 players_count = 5; // 房间内所有玩家数量
+  repeated MinesPlayer players = 6; // 落座玩家列表
+  repeated common.v1.PlayerInfo speakers = 7; // 麦位列表
+  common.v1.PlayerSettings player_settings = 8; // 玩家设置
+}
+
+// 翻开格子请求
+// MessageType: MINES_OPEN_CELL_REQ
+message OpenCellReq {
+  int32 cell_id = 1;
+}
+
+// 翻开格子响应
+// MessageType: MINES_OPEN_CELL_RES
+message OpenCellRes {
+  Cell cell = 1; // 格子信息
+  Cell radar_sign_cell = 2; // 雷达标记格子信息(如果没有翻开雷达格子，就为空)
+  int64 recv_id = 3; // 接收者id
+}
+
+// 翻开格子广播
+// MessageType: MINES_OPEN_CELL_BROADCAST
+message OpenCellBroadcast {
+  int64 bc_uid = 1; // 广播目标用户ID
+  int64 user_id = 2; // 操作用户id
+  Cell cell = 3; // 格子信息
+  Cell radar_sign_cell = 4; // 雷达标记格子信息(如果没有翻开雷达格子，就为空)
+}
+
+// 新倍率广播
+// MessageType: MINES_NEW_BET_RATES_BROADCAST
+message NewBetRatesBroadcast {
+  int64 bc_uid = 1; // 广播目标用户ID
+  int64 user_id = 2; // 操作用户id
+  repeated int32 new_bet_rates = 3; // 新倍率列表配置。实际倍率*100
+}
+
+// 落袋为安请求
+// MessageType: MINES_BAG_IN_REQ
+message BagInReq {
+  reserved 1;
+}
+
+// 落袋为安响应
+// MessageType: MINES_BAG_IN_RES
+message BagInRes {
+  reserved 1;
+}
+
+// 落袋为安广播
+// MessageType: MINES_BAG_IN_BROADCAST
+message BagInBroadcast {
+  int64 bc_uid = 1; // 广播目标用户ID
+  int64 user_id = 2; // 操作用户id
+  reserved 3;
+}
+
+// 死亡广播
+// MessageType: MINES_DEAD_BROADCAST
+message DeadBroadcast {
+  int64 bc_uid = 1; // 广播目标用户ID
+  int64 user_id = 2; // 死亡用户id
+  int32 player_status = 3; // 玩家状态 0 存活中 1 胜利 2 死亡 3 失败
+}
+
+// 游戏结算广播（全员广播）
+// MessageType: MINES_PRIZE_BROADCAST
+message PrizeBroadcast {
+  int64 bc_uid = 1; // 广播目标用户ID
+  int64 winer_id = 2; // 获胜者user_id
+  int64 win_coin = 3; // 获胜者赢取的金币
+  repeated MinesPlayer players = 4; // 参战玩家列表
+  map<int64, OpenedCellList> all_opened_cells = 5; // 参战玩家ID -> 已打开的格子列表(全部牌)
+}
+
+// 结束游戏广播（全员广播）重置为等待状态
+// MessageType: MINES_END_GAME_BROADCAST
+message EndGameBroadcast {
+  int64 bc_uid = 1; // 广播目标用户ID
+  GameInfo game_info = 2; // 游戏信息
+  MinesPlayer self = 3; // 自己的玩家信息
+  repeated MinesPlayer players = 4; // 参战玩家列表
+}
+
+// 切换视角请求
+// MessageType: MINES_CHANGE_VIEW_REQ
+message ChangeViewReq { 
+}
+
+// 切换视角响应
+// MessageType: MINES_CHANGE_VIEW_RES
+message ChangeViewRes {
+  GameInfo game_info = 1; // 游戏信息
+}
+
+// 开始游戏请求
+// MessageType: MINES_START_GAME_REQ
+message StartGameReq {
+}
+
+// 开始游戏响应
+// MessageType: MINES_START_GAME_RES
+message StartGameRes {
+}
+
+// 开始游戏广播(全员广播)
+// MessageType: MINES_START_GAME_BROADCAST
+message StartGameBroadcast {
+  int64 bc_uid = 1; // 广播目标用户ID
+  GameInfo game_info = 2; // 游戏信息
+  repeated MinesPlayer players = 3; // 落座玩家列表
+}
+
+// 结束游戏请求
+// MessageType: MINES_END_GAME_REQ
+message EndGameReq {
+}
+
+// 结束游戏响应
+// MessageType: MINES_END_GAME_RES
+message EndGameRes {
+}
+
+// ============ 历史记录相关消息 ============
+
+// 游戏结果枚举
+enum MinesGameResult {
+  MINES_RESULT_UNKNOWN = 0; // 未知
+  MINES_RESULT_WIN = 1; // 胜利（翻满9个金币且未翻到炸弹）
+  MINES_RESULT_BOMBED = 2; // 失败（翻到炸弹）
+  MINES_RESULT_CASH_OUT = 3; // 提现（对方先翻到炸弹，我方提现）
+  MINES_RESULT_OPPONENT_WIN = 4; // 对方胜利（对方先翻满9个金币）
+}
+
+// 获取玩家历史记录请求
+// MessageType: MINES_GET_PLAYER_HISTORY_REQ
+message GetPlayerHistoryReq {
+  int32 page = 1; // 页数，默认第一页
+  int64 start_time = 2; // 开始时间（Unix时间戳），默认当天开始
+  int64 end_time = 3; // 结束时间（Unix时间戳），默认当天结束
+}
+
+// 获取玩家历史记录响应
+// MessageType: MINES_GET_PLAYER_HISTORY_RES
+message GetPlayerHistoryRes {
+  repeated MinesHistoryRecord records = 1; // 历史记录列表
+}
+
+// 单条历史记录
+message MinesHistoryRecord {
+  string game_code = 1; // 游戏局号
+  int64 end_time = 2; // 结束时间
+  int64 cost = 3; // 消耗（底分）
+  int64 reward = 4; // 返奖金额
+  MinesGameResult result = 5; // 游戏结果
+  int32 final_multiplier = 6; // 最终倍率（实际倍率*100）
+  repeated MinesHistoryCell opened_cells = 7; // 自己翻开的格子列表
+}
+
+// 历史记录中的格子信息
+message MinesHistoryCell {
+  int32 cell_id = 1; // 格子ID（1-25，表示棋盘位置）
+  CellType cell_type = 2; // 格子类型
+  int32 flip_order = 3; // 翻开顺序（从1开始）
+  int32 multiplier = 4; // 翻开时的倍率（实际倍率*100, 只有金币有值）
+}

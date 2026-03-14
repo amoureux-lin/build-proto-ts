@@ -1,0 +1,310 @@
+syntax = "proto3";
+
+package common.v1;
+
+option go_package = "HeronGame/api/common/v1/pb;pb";
+
+// PacketHeader 数据包头（16字节固定）
+message PacketHeader {
+  uint32 length = 1;      // 包体长度（不包括包头的16字节）
+  uint32 msg_type = 2;    // 消息类型（对应MessageType枚举）
+  uint32 request_id = 3;  // 请求ID（客户端生成，用于请求响应匹配）
+  uint32 error_code = 4;  // 错误码（0=成功，非0=错误，对应ErrorCode枚举）
+}
+
+message RoomInfo {
+  int64 room_id = 1;
+  string room_name = 2;
+  int32 room_status = 3;
+  int32 apply_mic_count = 4; // 申请上麦数量
+  int32 room_mode = 5; // 房间模式 0: 游戏模式 1: 房主模式
+}
+
+// 默认的符合前端玩家信息结构的proto
+message DefaultPlayerInfo {
+  PlayerInfo player_info = 1; // 玩家信息，字段命名需要与前端约定一致
+}
+
+// 玩家信息基础类型
+message PlayerInfo {
+  int64 user_id = 1;
+  string nickname = 2;
+  string avatar = 3;
+  int64 coin = 4;
+  int32 seat = 5;
+  int32 role = 6;   // 角色 0: 未知 1: 旁观 2: 玩家
+  int32 post = 11;   // 职位 0: 普通玩家 1: 房主 2: 管理员
+  int32 state = 7;  // 状态 0: 在线 1: 准备 2: 游戏中 3: 离线 4: 离开
+  int64 coin_changed = 13; // 金币变化量
+  int32 mic_allow_status = 8; // 麦克风允许状态 0: 不允许 1: 申请中 2: 允许
+  bool mic_on = 9; // 麦克风是否开启
+  int64 next_mic_request_time = 10; // 下次允许申请开麦时间（时间戳/秒）
+  int64 mic_request_expired_time = 12; // 开麦申请过期时间（时间戳/秒）
+  int64 wait_ready_expired_time = 14; // 等待玩家准备倒计时的结束时间，单位秒。为0表示没有开启倒计时
+}
+
+message BarrageInfo {
+  PlayerInfo player = 1;
+  string content = 2;
+}
+
+// 发送弹幕请求
+// MessageType: COMMON_SEND_BARRAGE_REQ
+message SendBarrageReq {
+  string content = 1; // 内容
+}
+
+// 发送弹幕返回
+// MessageType: COMMON_SEND_BARRAGE_RES
+message SendBarrageRes {
+  string content = 1; // 内容
+}
+
+// 发送弹幕广播
+// MessageType: COMMON_SEND_BARRAGE_BROADCAST
+message SendBarrageBroadcast {
+  reserved 1;
+  repeated int64 gateway_player_ids = 3;
+  BarrageInfo barrage = 2;
+}
+
+// 申请上麦请求
+// MessageType: ROOM_APPLY_ALLOW_MIC_REQ
+message ApplyAllowMicReq {
+}
+
+// 申请上麦响应
+// MessageType: ROOM_APPLY_ALLOW_MIC_RES
+message ApplyAllowMicRes {
+  bool allowed = 1; // 是否直接上麦（玩家模式下申请直接通过）
+}
+
+// 申请上麦广播
+// MessageType: ROOM_APPLY_ALLOW_MIC_BROADCAST
+message ApplyAllowMicBroadcast {
+  int64 bc_uid = 2;
+  int64 player_id = 1; // 申请人ID
+  int32 apply_mic_count = 3; // 申请开麦数量
+}
+
+// 批准上麦请求
+// MessageType: ROOM_APPROVE_ALLOW_MIC_REQ
+message ApproveAllowMicReq {
+  int64 player_id = 1; // 申请人ID
+  bool allowed = 2; // 是否批准申请
+}
+
+// 批准上麦响应
+// MessageType: ROOM_APPROVE_ALLOW_MIC_RES
+message ApproveAllowMicRes {
+  int64 player_id = 1; // 申请人ID
+  bool allowed = 2; // 是否批准申请
+  int32 apply_mic_count = 3; // 申请开麦数量
+}
+
+// 批准上麦广播
+// MessageType: ROOM_APPROVE_ALLOW_MIC_BROADCAST
+message ApproveAllowMicBroadcast {
+  int64 bc_uid = 3;
+  int64 player_id = 1; // 申请人ID
+  bool allowed = 2; // 是否批准申请
+  int32 apply_mic_count = 4; // 申请开麦数量
+}
+
+// 用户上下麦广播（麦位列表变化时推送，给所有人）
+// MessageType: ROOM_ALLOW_MIC_CHANGED_BROADCAST
+message AllowMicChangedBroadcast {
+  int64 bc_uid = 3;
+  PlayerInfo player = 1; // 上下麦玩家信息
+  bool allowed = 2; // 是否上麦
+}
+
+// 开麦请求
+// MessageType: ROOM_OPEN_MIC_REQ
+message OpenMicReq {
+  bool open = 1; // 是否开麦
+}
+
+// 开麦响应
+// MessageType: ROOM_OPEN_MIC_RES
+message OpenMicRes {
+  bool open = 1; // 是否开麦
+} 
+
+// 开麦广播
+// MessageType: ROOM_OPEN_MIC_BROADCAST
+message OpenMicBroadcast {
+  int64 bc_uid = 3;
+  int64 player_id = 1; // 开麦人ID
+  bool open = 2; // 是否开麦
+}
+
+// 房主邀请上下麦请求
+// MessageType: ROOM_ALLOW_MIC_REQ
+message AllowMicReq {
+  int64 player_id = 1; // 需要批准开麦人ID
+  bool allow = 2; // 是否批准开麦
+}
+
+// 房主邀请上下麦响应
+// MessageType: ROOM_ALLOW_MIC_RES
+message AllowMicRes {
+  int64 player_id = 1; // 需要闭麦人ID
+  bool allow = 2; // 是否允许开麦
+}
+
+// 房主邀请上下麦广播
+// MessageType: ROOM_ALLOW_MIC_BROADCAST
+message AllowMicBroadcast {
+  int64 bc_uid = 3;
+  int64 player_id = 1; // 需要批准开麦人ID
+  bool allow = 2; // 是否批准开麦
+}
+
+// 同意房主拉上麦请求
+// MessageType: ROOM_AGREE_ALLOW_MIC_REQ
+message AgreeAllowMicReq {
+  bool agree = 1; // 是否同意
+}
+
+// 同意房主拉上麦响应
+// MessageType: ROOM_AGREE_ALLOW_MIC_RES
+message AgreeAllowMicRes {
+  bool agree = 1; // 是否同意
+}
+
+// 同意房主拉上麦广播
+// MessageType: ROOM_AGREE_ALLOW_MIC_BROADCAST
+message AgreeAllowMicBroadcast {
+  int64 bc_uid = 3;
+  int64 player_id = 1; // 需要同意开麦人ID
+  bool agree = 2; // 是否同意
+}
+
+// 申请上麦列表请求
+// MessageType: ROOM_APPLY_ALLOW_MIC_LIST_REQ
+message ApplyAllowMicListReq {
+}
+
+// 申请上麦列表响应
+// MessageType: ROOM_APPLY_ALLOW_MIC_LIST_RES
+message ApplyAllowMicListRes {
+  repeated PlayerInfo players = 1; // 申请开麦列表(按申请时间倒序)
+}
+
+// 房主闭麦请求
+// MessageType: ROOM_OWNER_CLOSE_MIC_REQ
+message OwnerCloseMicReq {
+  int64 player_id = 1; // 需要闭麦人ID
+}
+
+// 房主闭麦响应
+// MessageType: ROOM_OWNER_CLOSE_MIC_RES
+message OwnerCloseMicRes {
+  int64 player_id = 1; // 需要闭麦人ID
+}
+
+// 房主闭麦广播
+// MessageType: ROOM_OWNER_CLOSE_MIC_BROADCAST
+message OwnerCloseMicBroadcast {
+  int64 bc_uid = 3;
+  int64 player_id = 1; // 需要闭麦人ID
+}
+
+// 房间新房主广播
+// MessageType: COMMON_ROOM_NEW_OWNER_BROADCAST
+message RoomNewOwnerBroadcast {
+  int64 bc_uid = 2;
+  int64 player_id = 1; // 新房主ID
+}
+
+// 玩家列表请求
+// MessageType: ROOM_PLAYER_LIST_REQ
+message PlayerListReq {
+  int32 list_type = 1; // 玩家列表类型 0: 所有玩家 1: 好友
+}
+
+// 玩家列表响应
+// MessageType: ROOM_PLAYER_LIST_RES
+message PlayerListRes {
+  repeated PlayerInfo players = 1; // 玩家列表(已排序)
+  int32 list_type = 2; // 玩家列表类型 0: 所有玩家 1: 好友
+}
+
+// 设置房间模式请求
+// MessageType: ROOM_SET_ROOM_MODE_REQ
+message SetRoomModeReq {
+  int32 mode = 1; // 房间模式 0: 游戏模式 1: 房主模式
+}
+
+// 设置房间模式响应
+// MessageType: ROOM_SET_ROOM_MODE_RES
+message SetRoomModeRes {
+  int32 mode = 1; // 房间模式 0: 游戏模式 1: 房主模式
+  int32 players_count = 2; // 房间内所有玩家数量
+}
+
+// 房间模式广播
+// MessageType: ROOM_SET_ROOM_MODE_BROADCAST
+message SetRoomModeBroadcast {
+  int64 bc_uid = 1;
+  int32 mode = 2; // 房间模式 0: 游戏模式 1: 房主模式
+  int32 players_count = 3; // 房间内所有玩家数量
+}
+
+// 房主踢人请求
+// MessageType: ROOM_OWNER_KICK_OUT_OF_ROOM_REQ
+message OwnerKickOutOfRoomReq {
+  int64 player_id = 1; // 需要被踢出的玩家ID
+}
+
+// 房主踢人响应
+// MessageType: ROOM_OWNER_KICK_OUT_OF_ROOM_RES
+message OwnerKickOutOfRoomRes {
+  int64 player_id = 1; // 被踢出的玩家ID
+}
+
+// 房主踢人广播
+// MessageType: ROOM_OWNER_KICK_OUT_OF_ROOM_BROADCAST
+message OwnerKickOutOfRoomBroadcast {
+  int64 bc_uid = 1;
+  int64 player_id = 2; // 被踢出的玩家ID
+}
+
+// 房主踢人下座请求
+// MessageType: ROOM_OWNER_KICK_OFF_SEAT_REQ
+message OwnerKickOffSeatReq {
+  int64 player_id = 1; // 需要踢出的玩家ID
+}
+
+// 房主踢人下座响应
+// MessageType: ROOM_OWNER_KICK_OFF_SEAT_RES
+message OwnerKickOffSeatRes {
+  int64 player_id = 1; // 被踢出的玩家ID
+}
+
+// 房主踢人下座广播
+// MessageType: ROOM_OWNER_KICK_OFF_SEAT_BROADCAST
+message OwnerKickOffSeatBroadcast {
+  int64 bc_uid = 1;
+  int64 player_id = 2; // 被踢出的玩家ID
+}
+
+// 房主改变底分请求
+// MessageType: ROOM_OWNER_CHANGE_SCORE_REQ
+message OwnerChangeScoreReq {
+  int32 new_score = 1; // 新底分
+}
+
+// 房主改变底分响应
+// MessageType: ROOM_OWNER_CHANGE_SCORE_RES
+message OwnerChangeScoreRes {
+  int32 new_score = 1; // 新底分
+}
+
+// 房主改变底分广播
+// MessageType: ROOM_OWNER_CHANGE_SCORE_BROADCAST
+message OwnerChangeScoreBroadcast {
+  int64 bc_uid = 1;
+  int32 new_score = 2; // 新底分
+}

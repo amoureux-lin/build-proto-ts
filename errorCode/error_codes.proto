@@ -1,0 +1,214 @@
+syntax = "proto3";
+
+package common.v1;
+option go_package = "HeronGame/api/common/v1/pb;pb";
+
+// ErrorCode 错误码枚举
+enum ErrorCode {
+  SUCCESS = 0;
+  INTERNAL_SERVER_ERROR = 500; //服务器内部错误
+  REQUEST_TO_BUSY = 501;       //限流逻辑触发，请求过于频繁
+  SERVER_CLOSED = 502;         //服务器维护中
+
+  // 连接错误 (1000-1100)
+  CONNECTION_LIMIT = 1001;     // 连接数超限
+  CONNECTION_TIMEOUT = 1002;   // 连接超时
+  CONNECTION_CLOSED = 1003;    // 连接已关闭
+  COMMON_HEARTBEAT_TIMEOUT = 1004;            // 心跳超时
+  COMMON_PLAYER_CAN_NOT_LEAVE_ROOM = 1005;    // 游戏暂未结束，玩家不能离开房间
+
+  // 认证错误 (1100-1199)
+  AUTH_FAILED = 1100;            // 认证失败
+  TOKEN_EXPIRED = 1101;          // Token过期
+  TOKEN_INVALID = 1102;          // Token无效
+  TOKEN_MISS = 1103;             // Token缺失
+  TOKEN_PARAMS_NOT_MATCH = 1104; // Token缺失
+  TOKEN_PARAMS_MISS = 1105;      // Token缺失
+  USER_NOT_FOUND = 1106;         // 用户不存在
+  USER_COIN_INSUFFICIENT = 1107; // 用户带入金币余额不足
+  USER_GAME_ID_INVALID = 1108; // 用户游戏ID错误
+
+  // 客户端错误 (1200-1299)
+  INVALID_PARAM = 1200;        // 参数无效
+  MISSING_PARAM = 1201;        // 缺少参数
+  INVALID_PARAM_FORMAT = 1202; // 格式错误
+  INVALID_MESSAGE_TYPE = 1203; // 消息类型无效
+  INVALID_PACKET = 1204;       // 数据包格式错误
+
+  // 房间管理错误 (2000-2500)
+  GAME_ROOM_FULL = 2000;       // 游戏房间已满
+  GAME_NOT_STARTED = 2001;     // 游戏未开始
+  GAME_ALREADY_STARTED = 2002; // 游戏已开始
+  USER_ALREADY_IN_ROOM = 2003; // 用户已在房间中
+  USER_NOT_IN_ROOM = 2004;     // 用户不在房间中
+  ROOM_NOT_FOUND = 2005;       // 房间不存在
+  ROOM_ALREADY_EXISTS = 2006;  // 房间已存在
+  ROOM_NOT_OPEN = 2007;        // 房间未开放
+  ROOM_ACTOR_STOPPED = 2008;   // 房间Actor已停止
+  WATCHERS_FULL = 2009;        // 观众席已满
+  SEAT_OCCUPIED = 2010;        // 座位已被占用
+  SEAT_NUMBER_INVALID = 2011;  // 座位号无效
+  SEAT_OUT_OF_RANGE = 2012;    // 座位号超出范围
+  PLAYER_ALREADY_SEATED = 2013; // 玩家已经坐下
+  PLAYER_NOT_SEATED = 2014;     // 玩家没有坐下
+  PLAYER_NOT_ONLINE = 2015;     // 玩家不在线
+  LEAVE_ROOM_FAILED = 2016;     // 离开房间失败
+  SEND_BARRAGE_FAILED = 2017;   // 发送弹幕失败
+  SEND_BARRAGE_CONTENT_TOO_LONG = 2018; // 发送弹幕内容过长
+  SEND_BARRAGE_TOO_FREQUENT = 2019; // 发送弹幕太频繁
+  COMMON_GET_PLAYER_INFO_FAILED = 2020; // 获取用户信息失败
+  COMMON_GET_ROOM_INFO_FAILED = 2021; // 获取房间信息失败
+  COMMON_GET_GAME_INFO_FAILED = 2022; // 获取游戏信息失败
+  COMMON_PLAYER_NOT_IN_ANY_ROOM = 2023; // 玩家不在任何房间中
+  COMMON_ROOM_TYPE_INVALID = 2024; // 房间类型无效
+  COMMON_PLAYER_TYPE_INVALID = 2025; // 玩家类型无效
+  ROOM_MAX_PLAYER_REACHED = 2026; // 房间人数已满
+  PLAYER_NOT_READY = 2027; // 玩家未准备
+  PLAYER_ALREADY_READY = 2028; // 玩家已准备
+  PLAYER_NOT_IN_ROOM = 2029; // 玩家不在房间中
+  PLAYER_GAME_END = 2030; // 玩家游戏已结束
+  GAME_NOT_ENDED = 2031; // 游戏未结束
+  GAME_ENDED = 2032; // 游戏已结束
+  PLAYER_NOT_PLAYING = 2033; // 玩家未开始游戏
+  ROOM_MODE_INVALID = 2034; // 房间模式无效
+  ROOM_MODE_ALREADY_SET = 2035; // 房间模式已设置
+  COMMON_CTX_PLAYER_NOT_FOUND = 2036; // 玩家不存在
+  COMMON_CTX_ROOM_NOT_FOUND = 2037; // 房间不存在
+  COMMON_CTX_GAME_NOT_FOUND = 2038; // 游戏不存在
+  COMMON_AUTHORITY_NOT_ENOUGH = 2039; // 权限不足
+  PLAYER_KICK_OUT_OF_ROOM_PARAM_INVALID = 2040; // 踢出房间参数无效
+  PLAYER_KICK_OFF_SEAT_PARAM_INVALID = 2041; // 踢人下座参数无效
+  ROOM_CHANGE_SCORE_PARAM_INVALID = 2042; // 改变底分参数无效
+  PLAYER_COINS_NOT_ENOUGH = 2043; // 金币不足
+  PLAYER_AUTO_READY_FAILED = 2045; // 自动准备失败
+
+  // 房间麦克风错误 (2201-2300)
+  COMMON_MIC_ALREADY_ALLOW = 2201; // 玩家已允许开麦
+  COMMON_MIC_ALREADY_REQUEST = 2202; // 玩家已申请开麦
+  COMMON_MIC_NOT_ALLOW = 2203; // 玩家未允许开麦
+  COMMON_MIC_DENY = 2204; // 玩家开麦权限不够
+  COMMON_MIC_NOT_REQUEST = 2205; // 玩家未申请开麦
+  COMMON_MIC_NOT_MANAGER = 2206; // 玩家不是房主或管理员
+  COMMON_MIC_ALLOW_LIST_FULL = 2207; // 当前麦位列表已满
+  COMMON_MIC_APPLY_IN_CD = 2208; // 玩家申请上麦冷却中
+  COMMON_MIC_IS_MANAGER = 2209; // 玩家是房主或管理员
+  COMMON_MIC_INVITE_IN_CD = 2210; // 邀请上麦冷却中
+
+  // 房间游戏错误（2300-2500）
+  GAME_START_GAME_FAILED = 2300; // 开始游戏失败
+  GAME_START_GAME_NOT_WAITING = 2301; // 房间未处于等待状态
+  GAME_START_PLAYER_READY_NOT_ENOUGH = 2302; // 玩家准备人数不足
+  GAME_STATUS_INVALID = 2303; // 游戏状态无效
+  GAME_PLAYER_STATUS_INVALID = 2304; // 玩家状态无效
+  GAME_ROOM_STATUS_INVALID = 2305; // 房间状态无效
+  GAME_ROOM_GAME_STATUS_INVALID = 2306; // 房间游戏状态无效
+  GAME_PLAYER_GAME_STATUS_INVALID = 2307; // 玩家游戏状态无效
+  GAME_PLAYER_NOT_IN_GAME = 2308; // 玩家不在游戏中
+  GAME_PLAYER_IS_GAME_OVER = 2309; // 玩家游戏已结束
+  GAME_IS_OVER = 2310; // 游戏已结束
+
+  // 聊天服务错误 (3000-3500)
+  CHAT_GET_USER_INFO_FAILED = 3001;     // 获取用户信息失败
+  CHAT_ROOM_ID_INVALID = 3002;          // 房间ID无效
+  CHAT_SEAT_NUMBER_INVALID = 3003;      // 座位号无效
+  CHAT_PLAYER_NOT_IN_ANY_ROOM = 3004;   // 玩家不在任何房间中
+  CHAT_PLAYER_NOT_IN_SPECIFIED_ROOM = 3005; // 玩家不在指定房间中
+  CHAT_SENDER_NOT_IN_ROOM = 3006;       // 发送者不在聊天房间中
+  CHAT_TARGET_USER_NOT_IN_ANY_ROOM = 3007; // 目标用户不在任何房间中
+  CHAT_TARGET_USER_NOT_IN_SAME_ROOM = 3008; // 目标用户不在同一房间中
+  CHAT_CANNOT_GET_SENDER_INFO = 3009;   // 无法获取发送者信息
+  CHAT_ROOM_TYPE_INCORRECT = 3010;      // 房间类型不正确
+  CHAT_INVALID_MESSAGE_TYPE = 3011;     // 无效的聊天消息类型
+  CHAT_ROOM_EXISTS_BUT_NOT_CHAT = 3012; // 房间已存在但不是聊天房间
+  CHAT_CREATE_ROOM_FAILED = 3013;       // 创建或获取聊天房间失败
+  CHAT_JOIN_ROOM_FAILED = 3014;         // 加入房间失败
+  CHAT_LEAVE_ROOM_FAILED = 3015;        // 离开房间失败
+  CHAT_SEND_MESSAGE_FAILED = 3016;      // 发送消息失败
+  CHAT_SEND_PRIVATE_MESSAGE_FAILED = 3017; // 发送私信失败
+  CHAT_STORE_ROOM_FAILED = 3018;        // 存储聊天房间失败
+
+  // 纸牌接龙错误 (3500-4000)
+  SOLITAIRE_GET_USER_INFO_FAILED = 3501; // 获取用户信息失败
+  SOLITAIRE_PLAYER_NOT_IN_ANY_ROOM = 3502;   // 玩家不在任何房间中
+  SOLITAIRE_ROOM_NOT_FOUND = 3503; // 房间无效
+  SOLITAIRE_ROOM_MAX_PLAYER_REACHED = 3504; // 房间人数已满
+  SOLITAIRE_PLAYER_NOT_FOUND = 3505; // 玩家不存在
+  SOLITAIRE_CONNECTOR_CARD_FAILED = 3506; // 连接牌失败
+  SOLITAIRE_ROOM_NOT_WAITING = 3507; // 房间未处于等待状态
+  SOLITAIRE_PLAYER_ALREADY_READY = 3508; // 玩家已经准备
+  SOLITAIRE_WATCHERS_PLAYING_ERR = 3509;   // 旁观玩家无法操控游玩数据
+
+  // 扫雷服务错误 (4001-4500)
+  MINES_JOIN_ROOM_FAILED = 4001;        // 加入房间失败
+  MINES_LEAVE_ROOM_FAILED = 4002;       // 离开房间失败
+  MINES_SIT_DOWN_FAILED = 4003;         // 坐下失败
+  MINES_STAND_UP_FAILED = 4004;         // 站起失败
+  MINES_READY_GAME_FAILED = 4005;       // 准备失败
+  MINES_OPEN_CELL_FAILED = 4006;        // 打开格子失败
+  MINES_BAG_IN_FAILED = 4007;           // 落袋为安失败
+  MINES_GET_USER_INFO_FAILED = 4008;    // 获取用户信息失败
+  MINES_GET_ROOM_INFO_FAILED = 4009;    // 获取房间信息失败
+  MINES_GET_GAME_INFO_FAILED = 4010;    // 获取游戏信息失败
+  MINES_PLAYER_NOT_IN_ANY_ROOM = 4011;   // 玩家不在任何房间中
+  MINES_PLAYER_IN_ROOM = 4012;           // 玩家已在房间中
+  MINES_ROOM_TYPE_INVALID = 4013;       // 房间类型无效
+  MINES_PLAYER_TYPE_INVALID = 4014;     // 玩家类型无效
+  MINES_SEAT_INVALID = 4015;      // 座位号无效
+  MINES_SEAT_OCCUPIED = 4016;     // 座位已被占用
+  MINES_IS_READY = 4017;          // 玩家已准备
+  MINES_NOT_READY = 4018;         // 玩家未准备
+  MINES_CELL_ID_INVALID = 4019;   // 格子ID无效
+  MINES_CELL_ALREADY_OPEN = 4020; // 格子已打开
+  MINES_CELL_RADAR_SIGN_CANNOT_OPEN = 4021; // 不能打开雷达标记的格子
+  MINES_END_GAME_FAILED = 4022; // 结束游戏失败
+
+  // 猜拳游戏 (4501-5000)
+  BATO_GET_USER_INFO_FAILED = 4501; // 获取用户信息失败
+  BATO_PLAYER_NOT_IN_ANY_ROOM = 4502;   // 玩家不在任何房间中
+  BATO_ROOM_NOT_FOUND = 4503; // 房间无效
+  BATO_ROOM_MAX_PLAYER_REACHED = 4504; // 房间人数已满
+  BATO_PLAYER_NOT_FOUND = 4505; // 玩家不存在
+  BATO_DRAW_CARD_FAILED = 4506; // 出牌失败
+  BATO_ROOM_NOT_WAITING = 4507; // 房间未处于等待状态
+  BATO_PLAYER_ALREADY_READY = 4508; // 玩家已经准备
+  BATO_WATCHERS_PLAYING_ERR = 4509;   // 旁观玩家无法操控游玩数据
+  BATO_STAGE_FAILED = 4510; // 阶段错误
+  BATO_PLAYER_HAS_DRAW = 4511; // 玩家已出过牌
+  BATO_DRAW_TIME_OUT = 4512; // 倒计时结束，无法出牌
+
+  // tongits游戏 (5001-5500)
+  TONGITS_EAT_CARD_FAILED = 5001; // 吃牌失败
+  TONGITS_CARD_NOT_EXIST = 5002; // 手牌不存在
+  TONGITS_CANNOT_FORM_TYPE = 5003; // 无法组成牌型
+  TONGITS_MELDS_NOT_EXIST = 5004; // 碰牌不存在
+  TONGITS_NOT_CURRENT_PLAYER = 5005; // 非当前操作玩家
+  TONGITS_NOT_CURRENT_PHASE = 5006;   // 非当前阶段
+  TONGITS_CANNOT_CHALLENGE = 5007; // 无法挑战
+  TONGITS_CHALLENGE_FAILED = 5008; // 挑战失败
+  TONGITS_CANNOT_WIN = 5009;  // 无法tongits胜利
+
+
+  // 木头人游戏 (5501-6000)
+  UNLEASH_JOIN_ROOM_FAILED = 5501; // 加入房间失败
+  UNLEASH_START_GAME_FAILED = 5502; // 开始游戏失败
+  UNLEASH_RESET_GAME_FAILED = 5503; // 重置游戏失败
+  UNLEASH_RUN_FAILED = 5504; // 开跑失败
+  UNLEASH_HALT_FAILED = 5505; // 站住失败
+  UNLEASH_GAME_STATUS_INVALID = 5506; // 游戏状态无效
+  UNLEASH_PLAYER_STATUS_INVALID = 5507; // 玩家状态无效
+
+
+  // color (6000-6500)
+  COLOR_JOIN_ROOM_FAILED = 6001;                  // 加入房间失败
+  COLOR_INVALID_BET_COLOR_AREA = 6002;            // 无效的打码颜色
+  COLOR_INVALID_BET_AMOUNT = 6003;                // 无效的打码金额
+  COLOR_GAME_STATE_CANNOT_CANCEL_BET = 6004;      // 当前游戏状态无法撤销
+  COLOR_NO_BET_RECORD_CANNOT_CANCEL_BET = 6005;   // 无打码记录，无法撤销
+  COLOR_AREA_BET_LIMIT_EXCEEDED = 6006;           // 玩家打码已超出区域打码上限
+
+  // pusoy (6500-7000)
+  PUSOY_GAME_STATUS_INVALID = 6501; // 游戏状态无效
+  PUSOY_INDEX_OUT_RANGE = 6502; // 索引超出范围
+  PUSOY_HAS_READY = 6503; // 已准备
+  PUSOY_GAME_DATA_ERROR = 6504; // 游戏数据错误
+}

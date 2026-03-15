@@ -1,10 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-function toAbsolute(baseDir, value) {
-  return path.isAbsolute(value) ? value : path.resolve(baseDir, value);
-}
-
 function firstExistingPath(candidates) {
   for (const candidate of candidates) {
     if (candidate && fs.existsSync(candidate)) return candidate;
@@ -30,24 +26,33 @@ function resolveProjectApiRoot(contextInput) {
     path.resolve(outputRoot, '..', 'heroncloud-game', 'api'),
     path.resolve(outputRoot, '..', '..', 'heroncloud-game', 'api'),
     path.resolve(toolRoot, '..', 'heroncloud-game', 'api'),
-  ]);
+  ]) ?? null;
 }
 
 export function resolvePaths(contextInput) {
   const { config, outputRoot, configDir, cwd, toolRoot } = contextInput;
   const projectApiRoot = resolveProjectApiRoot(contextInput);
 
-  if (!projectApiRoot) {
-    throw new Error('未找到项目 proto 源目录。请在 protoConfig.json 中配置 paths.projectApiRoot。');
-  }
-
   const buildDir = config.paths.buildDir
     ? resolveConfiguredPath(config.paths.buildDir, [cwd, outputRoot, configDir, toolRoot])
     : path.join(outputRoot, 'build');
 
-  const protoWorkspaceDir = config.paths.protoWorkspaceDir
+  let protoWorkspaceDir = config.paths.protoWorkspaceDir
     ? resolveConfiguredPath(config.paths.protoWorkspaceDir, [cwd, outputRoot, configDir, toolRoot, buildDir])
     : path.join(buildDir, 'proto');
+
+  if (!projectApiRoot) {
+    if (!config.paths.protoWorkspaceDir) {
+      throw new Error(
+        '未找到项目 proto 源目录 (projectApiRoot)，且未配置 paths.protoWorkspaceDir。' +
+        '请配置 paths.protoWorkspaceDir 指向已有 proto 目录（如 "proto"），或配置 paths.projectApiRoot 以启用复制。'
+      );
+    }
+    protoWorkspaceDir = resolveConfiguredPath(config.paths.protoWorkspaceDir, [cwd, outputRoot, configDir, toolRoot]);
+    if (!protoWorkspaceDir || !fs.existsSync(protoWorkspaceDir)) {
+      throw new Error(`已配置 paths.protoWorkspaceDir 但目录不存在: ${config.paths.protoWorkspaceDir}`);
+    }
+  }
 
   const generatedDir = path.join(buildDir, 'output');
   const runtimeDir = path.join(buildDir, '.runtime');
@@ -68,7 +73,9 @@ export function resolvePaths(contextInput) {
 
   const errorSourceProtoPath = config.errorCode.sourceProtoPath
     ? resolveConfiguredPath(config.errorCode.sourceProtoPath, [cwd, outputRoot, configDir, toolRoot, projectApiRoot])
-    : path.join(projectApiRoot, 'common', config.messageTypes.version, 'proto', `${config.errorCode.protoName}.proto`);
+    : projectApiRoot
+      ? path.join(projectApiRoot, 'common', config.messageTypes.version, 'proto', `${config.errorCode.protoName}.proto`)
+      : path.join(protoWorkspaceDir, 'common', config.messageTypes.version, 'proto', `${config.errorCode.protoName}.proto`);
 
   return {
     cwd,
@@ -97,22 +104,6 @@ export function getBundleBuildDir(paths, bundleName) {
   return path.join(paths.generatedDir, bundleName);
 }
 
-export function getBundleProtoJsPath(paths, bundleName) {
-  return path.join(getBundleBuildDir(paths, bundleName), `${bundleName}Proto.js`);
-}
-
-export function getBundleProtoDtsPath(paths, bundleName) {
-  return path.join(getBundleBuildDir(paths, bundleName), `${bundleName}Proto.d.ts`);
-}
-
-export function getBundleMessageMapPath(paths, bundleName) {
-  return path.join(getBundleBuildDir(paths, bundleName), `${bundleName}Msg.ts`);
-}
-
 export function getMessageTypesProtoPath(paths, config) {
   return path.join(paths.protoWorkspaceDir, config.messageTypes.protoName, `${config.messageTypes.protoName}.proto`);
-}
-
-export function resolveConfiguredOutputPath(baseDir, value, fallback) {
-  return value ? toAbsolute(baseDir, value) : path.join(baseDir, fallback);
 }

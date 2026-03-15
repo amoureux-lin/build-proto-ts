@@ -24,6 +24,7 @@ export function normalizeProtoConfig(rawConfig) {
   const paths = rawConfig?.paths ?? {};
   const errorCode = rawConfig?.errorCode ?? {};
 
+  const tsProto = rawConfig?.tsProto ?? {};
   return {
     messageTypes,
     bundles,
@@ -33,6 +34,10 @@ export function normalizeProtoConfig(rawConfig) {
       buildDir: paths.buildDir ?? null,
       errorCodeWorkspaceDir: paths.errorCodeWorkspaceDir ?? null,
       plannerCsvPath: paths.plannerCsvPath ?? null,
+    },
+    tsProto: {
+      protobufjsMinimalImport: typeof tsProto.protobufjsMinimalImport === 'string' ? tsProto.protobufjsMinimalImport.trim() : null,
+      longImport: typeof tsProto.longImport === 'string' ? tsProto.longImport.trim() : null,
     },
     errorCode: {
       enabled: errorCode.enabled ?? true,

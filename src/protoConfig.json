@@ -1,4 +1,7 @@
 {
+    "paths": {
+        "protoWorkspaceDir": "proto"
+    },
     "message_types": {
         "version":"v1",
         "name":"common",

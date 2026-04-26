@@ -2,7 +2,7 @@
  * 由构建脚本根据 proto 生成，请勿手改。
  */
 import type { MessageMapping } from 'db://nexus-framework/index';
-import { JoinRoomReq, JoinRoomRes, StartGameReq, StartGameRes, GameStateChangeBroadcast, BetReq, BetRes, BetBroadcast, CancelBetReq, CancelBetRes, CancelBetBroadcast, GetDiceStatsReq, GetDiceStatsRes, GetColorPlayerHistoryReq, GetColorPlayerHistoryRes } from './color';
+import { JoinRoomReq, JoinRoomRes, StartGameReq, StartGameRes, GameStateChangeBroadcast, BetReq, BetRes, BetBroadcast, CancelBetReq, CancelBetRes, CancelBetBroadcast, GetDiceStatsReq, GetDiceStatsRes, GetColorPlayerHistoryReq, GetColorPlayerHistoryRes, GetWinnerDoubleUpBonusInfoReq, GetWinnerDoubleUpBonusInfoRes, PlayDoubleUpBonusReq, PlayDoubleUpBonusRes } from './color';
 import { MessageType } from './message_type';
 
 /** 从 Writer 得到 Uint8Array（ts_proto 的 encode 返回 Writer） */
@@ -85,5 +85,25 @@ export const COLOR_MSG_REGISTRY: Record<number, MessageMapping> = {
         decode: (buf) => GetColorPlayerHistoryRes.decode(buf),
         encode: (msg) => finish(GetColorPlayerHistoryRes.encode(msg as GetColorPlayerHistoryRes)),
         name: 'GetColorPlayerHistoryRes',
+    },
+    [MessageType.COLOR_GET_PLAYER_DOUBLE_UP_BONUS_INFO_REQ]: {
+        decode: (buf) => GetWinnerDoubleUpBonusInfoReq.decode(buf),
+        encode: (msg) => finish(GetWinnerDoubleUpBonusInfoReq.encode(msg as GetWinnerDoubleUpBonusInfoReq)),
+        name: 'GetWinnerDoubleUpBonusInfoReq',
+    },
+    [MessageType.COLOR_GET_PLAYER_DOUBLE_UP_BONUS_INFO_RES]: {
+        decode: (buf) => GetWinnerDoubleUpBonusInfoRes.decode(buf),
+        encode: (msg) => finish(GetWinnerDoubleUpBonusInfoRes.encode(msg as GetWinnerDoubleUpBonusInfoRes)),
+        name: 'GetWinnerDoubleUpBonusInfoRes',
+    },
+    [MessageType.COLOR_PLAY_DOUBLE_UP_BONUS_REQ]: {
+        decode: (buf) => PlayDoubleUpBonusReq.decode(buf),
+        encode: (msg) => finish(PlayDoubleUpBonusReq.encode(msg as PlayDoubleUpBonusReq)),
+        name: 'PlayDoubleUpBonusReq',
+    },
+    [MessageType.COLOR_PLAY_DOUBLE_UP_BONUS_RES]: {
+        decode: (buf) => PlayDoubleUpBonusRes.decode(buf),
+        encode: (msg) => finish(PlayDoubleUpBonusRes.encode(msg as PlayDoubleUpBonusRes)),
+        name: 'PlayDoubleUpBonusRes',
     },
 };

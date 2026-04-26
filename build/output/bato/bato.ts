@@ -6,8 +6,8 @@
 
 /* eslint-disable */
 import Long from "long";
-import _m0 from "protobufjs/minimal";
-import { PlayerInfo } from "./game_common_room";
+import _m0 from "protobufjs";
+import { PlayerInfo, PlayerSettings } from "./game_common_room";
 
 export const protobufPackage = "bato.v1";
 
@@ -42,7 +42,11 @@ export interface JoinRoomRes {
     | BatoPayerInfo
     | undefined;
   /** 游戏信息 */
-  gameInfo: GameInfo | undefined;
+  gameInfo:
+    | GameInfo
+    | undefined;
+  /** 玩家设置 */
+  playerSettings: PlayerSettings | undefined;
 }
 
 /**
@@ -341,6 +345,7 @@ function createBaseJoinRoomRes(): JoinRoomRes {
     speakers: [],
     self: undefined,
     gameInfo: undefined,
+    playerSettings: undefined,
   };
 }
 
@@ -366,6 +371,9 @@ export const JoinRoomRes = {
     }
     if (message.gameInfo !== undefined) {
       GameInfo.encode(message.gameInfo, writer.uint32(58).fork()).ldelim();
+    }
+    if (message.playerSettings !== undefined) {
+      PlayerSettings.encode(message.playerSettings, writer.uint32(66).fork()).ldelim();
     }
     return writer;
   },
@@ -426,6 +434,13 @@ export const JoinRoomRes = {
 
           message.gameInfo = GameInfo.decode(reader, reader.uint32());
           continue;
+        case 8:
+          if (tag !== 66) {
+            break;
+          }
+
+          message.playerSettings = PlayerSettings.decode(reader, reader.uint32());
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -450,6 +465,7 @@ export const JoinRoomRes = {
         : [],
       self: isSet(object.self) ? BatoPayerInfo.fromJSON(object.self) : undefined,
       gameInfo: isSet(object.gameInfo) ? GameInfo.fromJSON(object.gameInfo) : undefined,
+      playerSettings: isSet(object.playerSettings) ? PlayerSettings.fromJSON(object.playerSettings) : undefined,
     };
   },
 
@@ -476,6 +492,9 @@ export const JoinRoomRes = {
     if (message.gameInfo !== undefined) {
       obj.gameInfo = GameInfo.toJSON(message.gameInfo);
     }
+    if (message.playerSettings !== undefined) {
+      obj.playerSettings = PlayerSettings.toJSON(message.playerSettings);
+    }
     return obj;
   },
 
@@ -496,6 +515,9 @@ export const JoinRoomRes = {
       : undefined;
     message.gameInfo = (object.gameInfo !== undefined && object.gameInfo !== null)
       ? GameInfo.fromPartial(object.gameInfo)
+      : undefined;
+    message.playerSettings = (object.playerSettings !== undefined && object.playerSettings !== null)
+      ? PlayerSettings.fromPartial(object.playerSettings)
       : undefined;
     return message;
   },

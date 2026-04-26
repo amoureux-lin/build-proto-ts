@@ -6,8 +6,8 @@
 
 /* eslint-disable */
 import Long from "long";
-import _m0 from "protobufjs/minimal";
-import { PlayerInfo } from "./game_common_room";
+import _m0 from "protobufjs";
+import { PlayerInfo, PlayerSettings } from "./game_common_room";
 
 export const protobufPackage = "tongits.v1";
 
@@ -163,7 +163,11 @@ export interface JoinRoomRes {
     | TongitsPlayerInfo
     | undefined;
   /** 游戏信息 */
-  gameInfo: GameInfo | undefined;
+  gameInfo:
+    | GameInfo
+    | undefined;
+  /** 玩家设置 */
+  playerSettings: PlayerSettings | undefined;
 }
 
 /**
@@ -581,6 +585,17 @@ export interface TongitsHistoryInfo {
   potReward: number;
   /** 总计 */
   totalReward: number;
+}
+
+/**
+ * 游戏即将开始倒计时 (满2人触发)
+ * MessageType: TONGITS_GAME_READY_BROADCAST (3035)
+ */
+export interface GameReadyBroadcast {
+  /** 倒计时秒数 (如: 3) */
+  countdownSeconds: number;
+  /** 绝对开始时间戳 */
+  startTime: number;
 }
 
 function createBaseEmptyRes(): EmptyRes {
@@ -1782,6 +1797,7 @@ function createBaseJoinRoomRes(): JoinRoomRes {
     speakers: [],
     self: undefined,
     gameInfo: undefined,
+    playerSettings: undefined,
   };
 }
 
@@ -1807,6 +1823,9 @@ export const JoinRoomRes = {
     }
     if (message.gameInfo !== undefined) {
       GameInfo.encode(message.gameInfo, writer.uint32(58).fork()).ldelim();
+    }
+    if (message.playerSettings !== undefined) {
+      PlayerSettings.encode(message.playerSettings, writer.uint32(66).fork()).ldelim();
     }
     return writer;
   },
@@ -1867,6 +1886,13 @@ export const JoinRoomRes = {
 
           message.gameInfo = GameInfo.decode(reader, reader.uint32());
           continue;
+        case 8:
+          if (tag !== 66) {
+            break;
+          }
+
+          message.playerSettings = PlayerSettings.decode(reader, reader.uint32());
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1891,6 +1917,7 @@ export const JoinRoomRes = {
         : [],
       self: isSet(object.self) ? TongitsPlayerInfo.fromJSON(object.self) : undefined,
       gameInfo: isSet(object.gameInfo) ? GameInfo.fromJSON(object.gameInfo) : undefined,
+      playerSettings: isSet(object.playerSettings) ? PlayerSettings.fromJSON(object.playerSettings) : undefined,
     };
   },
 
@@ -1917,6 +1944,9 @@ export const JoinRoomRes = {
     if (message.gameInfo !== undefined) {
       obj.gameInfo = GameInfo.toJSON(message.gameInfo);
     }
+    if (message.playerSettings !== undefined) {
+      obj.playerSettings = PlayerSettings.toJSON(message.playerSettings);
+    }
     return obj;
   },
 
@@ -1937,6 +1967,9 @@ export const JoinRoomRes = {
       : undefined;
     message.gameInfo = (object.gameInfo !== undefined && object.gameInfo !== null)
       ? GameInfo.fromPartial(object.gameInfo)
+      : undefined;
+    message.playerSettings = (object.playerSettings !== undefined && object.playerSettings !== null)
+      ? PlayerSettings.fromPartial(object.playerSettings)
       : undefined;
     return message;
   },
@@ -5062,6 +5095,80 @@ export const TongitsHistoryInfo = {
     message.normalReward = object.normalReward ?? 0;
     message.potReward = object.potReward ?? 0;
     message.totalReward = object.totalReward ?? 0;
+    return message;
+  },
+};
+
+function createBaseGameReadyBroadcast(): GameReadyBroadcast {
+  return { countdownSeconds: 0, startTime: 0 };
+}
+
+export const GameReadyBroadcast = {
+  encode(message: GameReadyBroadcast, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.countdownSeconds !== 0) {
+      writer.uint32(8).int32(message.countdownSeconds);
+    }
+    if (message.startTime !== 0) {
+      writer.uint32(16).int64(message.startTime);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): GameReadyBroadcast {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGameReadyBroadcast();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.countdownSeconds = reader.int32();
+          continue;
+        case 2:
+          if (tag !== 16) {
+            break;
+          }
+
+          message.startTime = longToNumber(reader.int64() as Long);
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GameReadyBroadcast {
+    return {
+      countdownSeconds: isSet(object.countdownSeconds) ? globalThis.Number(object.countdownSeconds) : 0,
+      startTime: isSet(object.startTime) ? globalThis.Number(object.startTime) : 0,
+    };
+  },
+
+  toJSON(message: GameReadyBroadcast): unknown {
+    const obj: any = {};
+    if (message.countdownSeconds !== 0) {
+      obj.countdownSeconds = Math.round(message.countdownSeconds);
+    }
+    if (message.startTime !== 0) {
+      obj.startTime = Math.round(message.startTime);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<GameReadyBroadcast>, I>>(base?: I): GameReadyBroadcast {
+    return GameReadyBroadcast.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<GameReadyBroadcast>, I>>(object: I): GameReadyBroadcast {
+    const message = createBaseGameReadyBroadcast();
+    message.countdownSeconds = object.countdownSeconds ?? 0;
+    message.startTime = object.startTime ?? 0;
     return message;
   },
 };

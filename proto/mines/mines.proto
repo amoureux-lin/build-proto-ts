@@ -94,6 +94,7 @@ message JoinRoomRes {
   int32 players_count = 5; // 房间内所有玩家数量
   repeated MinesPlayer players = 6; // 落座玩家列表
   repeated common.v1.PlayerInfo speakers = 7; // 麦位列表
+  common.v1.PlayerSettings player_settings = 8; // 玩家设置
 }
 
 // 翻开格子请求

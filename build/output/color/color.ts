@@ -6,8 +6,8 @@
 
 /* eslint-disable */
 import Long from "long";
-import _m0 from "protobufjs/minimal";
-import { PlayerInfo, RoomInfo } from "./game_common_room";
+import _m0 from "protobufjs";
+import { PlayerInfo, PlayerSettings, RoomInfo } from "./game_common_room";
 
 export const protobufPackage = "color.v1";
 
@@ -27,6 +27,18 @@ export interface ColorPlayerInfo {
   betInfos: BetInfo[];
 }
 
+export interface ColorPlayerStrategy {
+  scores: number[];
+  areaBetLimit: number[];
+  userDefaultBetAreas: UserDefaultBetArea[];
+  userLevel: string;
+}
+
+export interface UserDefaultBetArea {
+  /** 保持现有定义 */
+  val: string[];
+}
+
 /** 打码信息 */
 export interface BetInfo {
   /** 颜色区 */
@@ -37,6 +49,21 @@ export interface BetInfo {
   odds: number;
   /** 赔付金额 */
   payoutAmount: number;
+}
+
+export interface DoubleUpBetInfo {
+  /** color 赢的部分打码金额固定 */
+  betAmount: number;
+  /** 参与Double Up Bonus的打码金额赢的时候的更新为2倍 */
+  payoutAmount: number;
+  /** 游戏局号 */
+  gameCode: string;
+  /** Double Up Bonus 序号 */
+  bonusSeq: number;
+  /** color的payout固定值 在最后输了的时候用这个值计算 */
+  basePayoutAmount: number;
+  /** baseGame开始时间 */
+  baseStartTime: number;
 }
 
 /** 结算玩家信息 */
@@ -65,6 +92,7 @@ export interface GameInfo {
   settlePlayers: SettlePlayer[];
   /** 玩家打码上限 */
   playerBetLimit: number[];
+  betConfig: string;
 }
 
 /**
@@ -93,7 +121,11 @@ export interface JoinRoomRes {
   /** 所有玩家信息 */
   players: ColorPlayerInfo[];
   /** 玩家自己的信息 */
-  self: ColorPlayerInfo | undefined;
+  self:
+    | ColorPlayerInfo
+    | undefined;
+  /** 玩家设置 */
+  playerSettings: PlayerSettings | undefined;
 }
 
 /**
@@ -239,6 +271,22 @@ export interface ColorPlayerHistory {
   reward: number;
   /** Win/Lost */
   result: number;
+  /** Double Up Bonus 信息 */
+  ecolorBonusPlayerDetail: EcolorBonusPlayerDetail[];
+}
+
+export interface EcolorBonusPlayerDetail {
+  /** 玩家id */
+  userId: number;
+  /** bonus结果 1:成功 2：失败 */
+  bonusResult: number;
+  /** 参与bonus的打码值 */
+  betAmount: number;
+  /** bonus的输赢 */
+  payoutAmount: number;
+  /** 本次double up bonus结果 1-52卡牌数字 */
+  cardResult: number;
+  historyPayoutAmount: number;
 }
 
 /**
@@ -247,6 +295,53 @@ export interface ColorPlayerHistory {
  */
 export interface GetColorPlayerHistoryRes {
   colorPlayerHistory: ColorPlayerHistory[];
+}
+
+/**
+ * 获取赢的玩家的Double Up Bonus信息请求
+ * MessageType: COLOR_GET_PLAYER_DOUBLE_UP_BONUS_INFO_REQ
+ */
+export interface GetWinnerDoubleUpBonusInfoReq {
+}
+
+/**
+ * 获取赢的玩家的Double Up Bonus信息响应
+ * MessageType: COLOR_GET_PLAYER_DOUBLE_UP_BONUS_INFO_RES
+ */
+export interface GetWinnerDoubleUpBonusInfoRes {
+  /** 玩家打码金额 */
+  betAmount: number;
+  /** 赔付玩家金额 */
+  payOutAmount: number;
+  /** Double Up Bonus win金额 */
+  doubleUpBonusWinAmount: number;
+}
+
+/**
+ * Play Double Up Bonus 请求
+ * MessageType: COLOR_PLAY_DOUBLE_UP_BONUS_REQ
+ */
+export interface PlayDoubleUpBonusReq {
+  /** 选牌 1 红 2黑 */
+  cardColor: number;
+}
+
+/**
+ * Play Double Up Bonus 响应
+ * MessageType: COLOR_PLAY_DOUBLE_UP_BONUS_RES
+ */
+export interface PlayDoubleUpBonusRes {
+  /** 结果1赢 2输 */
+  result: number;
+  /** 52张牌 */
+  card: number;
+  /** 玩家打码金额 */
+  betAmount: number;
+  /** 赔付玩家金额 */
+  payOutAmount: number;
+  /** Double Up Bonus win金额 */
+  doubleUpBonusWinAmount: number;
+  playerCoins: number;
 }
 
 function createBaseColorGameConfig(): ColorGameConfig {
@@ -396,6 +491,195 @@ export const ColorPlayerInfo = {
   },
 };
 
+function createBaseColorPlayerStrategy(): ColorPlayerStrategy {
+  return { scores: [], areaBetLimit: [], userDefaultBetAreas: [], userLevel: "" };
+}
+
+export const ColorPlayerStrategy = {
+  encode(message: ColorPlayerStrategy, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    writer.uint32(10).fork();
+    for (const v of message.scores) {
+      writer.int32(v);
+    }
+    writer.ldelim();
+    writer.uint32(18).fork();
+    for (const v of message.areaBetLimit) {
+      writer.int32(v);
+    }
+    writer.ldelim();
+    for (const v of message.userDefaultBetAreas) {
+      UserDefaultBetArea.encode(v!, writer.uint32(26).fork()).ldelim();
+    }
+    if (message.userLevel !== "") {
+      writer.uint32(34).string(message.userLevel);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): ColorPlayerStrategy {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseColorPlayerStrategy();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag === 8) {
+            message.scores.push(reader.int32());
+
+            continue;
+          }
+
+          if (tag === 10) {
+            const end2 = reader.uint32() + reader.pos;
+            while (reader.pos < end2) {
+              message.scores.push(reader.int32());
+            }
+
+            continue;
+          }
+
+          break;
+        case 2:
+          if (tag === 16) {
+            message.areaBetLimit.push(reader.int32());
+
+            continue;
+          }
+
+          if (tag === 18) {
+            const end2 = reader.uint32() + reader.pos;
+            while (reader.pos < end2) {
+              message.areaBetLimit.push(reader.int32());
+            }
+
+            continue;
+          }
+
+          break;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.userDefaultBetAreas.push(UserDefaultBetArea.decode(reader, reader.uint32()));
+          continue;
+        case 4:
+          if (tag !== 34) {
+            break;
+          }
+
+          message.userLevel = reader.string();
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ColorPlayerStrategy {
+    return {
+      scores: globalThis.Array.isArray(object?.scores) ? object.scores.map((e: any) => globalThis.Number(e)) : [],
+      areaBetLimit: globalThis.Array.isArray(object?.areaBetLimit)
+        ? object.areaBetLimit.map((e: any) => globalThis.Number(e))
+        : [],
+      userDefaultBetAreas: globalThis.Array.isArray(object?.userDefaultBetAreas)
+        ? object.userDefaultBetAreas.map((e: any) => UserDefaultBetArea.fromJSON(e))
+        : [],
+      userLevel: isSet(object.userLevel) ? globalThis.String(object.userLevel) : "",
+    };
+  },
+
+  toJSON(message: ColorPlayerStrategy): unknown {
+    const obj: any = {};
+    if (message.scores?.length) {
+      obj.scores = message.scores.map((e) => Math.round(e));
+    }
+    if (message.areaBetLimit?.length) {
+      obj.areaBetLimit = message.areaBetLimit.map((e) => Math.round(e));
+    }
+    if (message.userDefaultBetAreas?.length) {
+      obj.userDefaultBetAreas = message.userDefaultBetAreas.map((e) => UserDefaultBetArea.toJSON(e));
+    }
+    if (message.userLevel !== "") {
+      obj.userLevel = message.userLevel;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<ColorPlayerStrategy>, I>>(base?: I): ColorPlayerStrategy {
+    return ColorPlayerStrategy.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<ColorPlayerStrategy>, I>>(object: I): ColorPlayerStrategy {
+    const message = createBaseColorPlayerStrategy();
+    message.scores = object.scores?.map((e) => e) || [];
+    message.areaBetLimit = object.areaBetLimit?.map((e) => e) || [];
+    message.userDefaultBetAreas = object.userDefaultBetAreas?.map((e) => UserDefaultBetArea.fromPartial(e)) || [];
+    message.userLevel = object.userLevel ?? "";
+    return message;
+  },
+};
+
+function createBaseUserDefaultBetArea(): UserDefaultBetArea {
+  return { val: [] };
+}
+
+export const UserDefaultBetArea = {
+  encode(message: UserDefaultBetArea, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    for (const v of message.val) {
+      writer.uint32(10).string(v!);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): UserDefaultBetArea {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUserDefaultBetArea();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 10) {
+            break;
+          }
+
+          message.val.push(reader.string());
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): UserDefaultBetArea {
+    return { val: globalThis.Array.isArray(object?.val) ? object.val.map((e: any) => globalThis.String(e)) : [] };
+  },
+
+  toJSON(message: UserDefaultBetArea): unknown {
+    const obj: any = {};
+    if (message.val?.length) {
+      obj.val = message.val;
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<UserDefaultBetArea>, I>>(base?: I): UserDefaultBetArea {
+    return UserDefaultBetArea.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<UserDefaultBetArea>, I>>(object: I): UserDefaultBetArea {
+    const message = createBaseUserDefaultBetArea();
+    message.val = object.val?.map((e) => e) || [];
+    return message;
+  },
+};
+
 function createBaseBetInfo(): BetInfo {
   return { area: 0, betAmount: 0, odds: 0, payoutAmount: 0 };
 }
@@ -500,6 +784,140 @@ export const BetInfo = {
   },
 };
 
+function createBaseDoubleUpBetInfo(): DoubleUpBetInfo {
+  return { betAmount: 0, payoutAmount: 0, gameCode: "", bonusSeq: 0, basePayoutAmount: 0, baseStartTime: 0 };
+}
+
+export const DoubleUpBetInfo = {
+  encode(message: DoubleUpBetInfo, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.betAmount !== 0) {
+      writer.uint32(8).int32(message.betAmount);
+    }
+    if (message.payoutAmount !== 0) {
+      writer.uint32(16).int32(message.payoutAmount);
+    }
+    if (message.gameCode !== "") {
+      writer.uint32(26).string(message.gameCode);
+    }
+    if (message.bonusSeq !== 0) {
+      writer.uint32(32).int32(message.bonusSeq);
+    }
+    if (message.basePayoutAmount !== 0) {
+      writer.uint32(40).int32(message.basePayoutAmount);
+    }
+    if (message.baseStartTime !== 0) {
+      writer.uint32(48).int64(message.baseStartTime);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): DoubleUpBetInfo {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDoubleUpBetInfo();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.betAmount = reader.int32();
+          continue;
+        case 2:
+          if (tag !== 16) {
+            break;
+          }
+
+          message.payoutAmount = reader.int32();
+          continue;
+        case 3:
+          if (tag !== 26) {
+            break;
+          }
+
+          message.gameCode = reader.string();
+          continue;
+        case 4:
+          if (tag !== 32) {
+            break;
+          }
+
+          message.bonusSeq = reader.int32();
+          continue;
+        case 5:
+          if (tag !== 40) {
+            break;
+          }
+
+          message.basePayoutAmount = reader.int32();
+          continue;
+        case 6:
+          if (tag !== 48) {
+            break;
+          }
+
+          message.baseStartTime = longToNumber(reader.int64() as Long);
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): DoubleUpBetInfo {
+    return {
+      betAmount: isSet(object.betAmount) ? globalThis.Number(object.betAmount) : 0,
+      payoutAmount: isSet(object.payoutAmount) ? globalThis.Number(object.payoutAmount) : 0,
+      gameCode: isSet(object.gameCode) ? globalThis.String(object.gameCode) : "",
+      bonusSeq: isSet(object.bonusSeq) ? globalThis.Number(object.bonusSeq) : 0,
+      basePayoutAmount: isSet(object.basePayoutAmount) ? globalThis.Number(object.basePayoutAmount) : 0,
+      baseStartTime: isSet(object.baseStartTime) ? globalThis.Number(object.baseStartTime) : 0,
+    };
+  },
+
+  toJSON(message: DoubleUpBetInfo): unknown {
+    const obj: any = {};
+    if (message.betAmount !== 0) {
+      obj.betAmount = Math.round(message.betAmount);
+    }
+    if (message.payoutAmount !== 0) {
+      obj.payoutAmount = Math.round(message.payoutAmount);
+    }
+    if (message.gameCode !== "") {
+      obj.gameCode = message.gameCode;
+    }
+    if (message.bonusSeq !== 0) {
+      obj.bonusSeq = Math.round(message.bonusSeq);
+    }
+    if (message.basePayoutAmount !== 0) {
+      obj.basePayoutAmount = Math.round(message.basePayoutAmount);
+    }
+    if (message.baseStartTime !== 0) {
+      obj.baseStartTime = Math.round(message.baseStartTime);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<DoubleUpBetInfo>, I>>(base?: I): DoubleUpBetInfo {
+    return DoubleUpBetInfo.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<DoubleUpBetInfo>, I>>(object: I): DoubleUpBetInfo {
+    const message = createBaseDoubleUpBetInfo();
+    message.betAmount = object.betAmount ?? 0;
+    message.payoutAmount = object.payoutAmount ?? 0;
+    message.gameCode = object.gameCode ?? "";
+    message.bonusSeq = object.bonusSeq ?? 0;
+    message.basePayoutAmount = object.basePayoutAmount ?? 0;
+    message.baseStartTime = object.baseStartTime ?? 0;
+    return message;
+  },
+};
+
 function createBaseSettlePlayer(): SettlePlayer {
   return { playerId: 0, winInfos: [] };
 }
@@ -584,6 +1002,7 @@ function createBaseGameInfo(): GameInfo {
     diceInfos: [],
     settlePlayers: [],
     playerBetLimit: [],
+    betConfig: "",
   };
 }
 
@@ -619,6 +1038,9 @@ export const GameInfo = {
       writer.int32(v);
     }
     writer.ldelim();
+    if (message.betConfig !== "") {
+      writer.uint32(74).string(message.betConfig);
+    }
     return writer;
   },
 
@@ -715,6 +1137,13 @@ export const GameInfo = {
           }
 
           break;
+        case 9:
+          if (tag !== 74) {
+            break;
+          }
+
+          message.betConfig = reader.string();
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -740,6 +1169,7 @@ export const GameInfo = {
       playerBetLimit: globalThis.Array.isArray(object?.playerBetLimit)
         ? object.playerBetLimit.map((e: any) => globalThis.Number(e))
         : [],
+      betConfig: isSet(object.betConfig) ? globalThis.String(object.betConfig) : "",
     };
   },
 
@@ -769,6 +1199,9 @@ export const GameInfo = {
     if (message.playerBetLimit?.length) {
       obj.playerBetLimit = message.playerBetLimit.map((e) => Math.round(e));
     }
+    if (message.betConfig !== "") {
+      obj.betConfig = message.betConfig;
+    }
     return obj;
   },
 
@@ -785,6 +1218,7 @@ export const GameInfo = {
     message.diceInfos = object.diceInfos?.map((e) => e) || [];
     message.settlePlayers = object.settlePlayers?.map((e) => SettlePlayer.fromPartial(e)) || [];
     message.playerBetLimit = object.playerBetLimit?.map((e) => e) || [];
+    message.betConfig = object.betConfig ?? "";
     return message;
   },
 };
@@ -847,7 +1281,14 @@ export const JoinRoomReq = {
 };
 
 function createBaseJoinRoomRes(): JoinRoomRes {
-  return { roomInfo: undefined, gameInfo: undefined, playersCount: 0, players: [], self: undefined };
+  return {
+    roomInfo: undefined,
+    gameInfo: undefined,
+    playersCount: 0,
+    players: [],
+    self: undefined,
+    playerSettings: undefined,
+  };
 }
 
 export const JoinRoomRes = {
@@ -866,6 +1307,9 @@ export const JoinRoomRes = {
     }
     if (message.self !== undefined) {
       ColorPlayerInfo.encode(message.self, writer.uint32(42).fork()).ldelim();
+    }
+    if (message.playerSettings !== undefined) {
+      PlayerSettings.encode(message.playerSettings, writer.uint32(50).fork()).ldelim();
     }
     return writer;
   },
@@ -912,6 +1356,13 @@ export const JoinRoomRes = {
 
           message.self = ColorPlayerInfo.decode(reader, reader.uint32());
           continue;
+        case 6:
+          if (tag !== 50) {
+            break;
+          }
+
+          message.playerSettings = PlayerSettings.decode(reader, reader.uint32());
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -930,6 +1381,7 @@ export const JoinRoomRes = {
         ? object.players.map((e: any) => ColorPlayerInfo.fromJSON(e))
         : [],
       self: isSet(object.self) ? ColorPlayerInfo.fromJSON(object.self) : undefined,
+      playerSettings: isSet(object.playerSettings) ? PlayerSettings.fromJSON(object.playerSettings) : undefined,
     };
   },
 
@@ -950,6 +1402,9 @@ export const JoinRoomRes = {
     if (message.self !== undefined) {
       obj.self = ColorPlayerInfo.toJSON(message.self);
     }
+    if (message.playerSettings !== undefined) {
+      obj.playerSettings = PlayerSettings.toJSON(message.playerSettings);
+    }
     return obj;
   },
 
@@ -968,6 +1423,9 @@ export const JoinRoomRes = {
     message.players = object.players?.map((e) => ColorPlayerInfo.fromPartial(e)) || [];
     message.self = (object.self !== undefined && object.self !== null)
       ? ColorPlayerInfo.fromPartial(object.self)
+      : undefined;
+    message.playerSettings = (object.playerSettings !== undefined && object.playerSettings !== null)
+      ? PlayerSettings.fromPartial(object.playerSettings)
       : undefined;
     return message;
   },
@@ -1976,7 +2434,16 @@ export const GetColorPlayerHistoryReq = {
 };
 
 function createBaseColorPlayerHistory(): ColorPlayerHistory {
-  return { gameCode: "", endTime: 0, diceInfos: [], betInfos: [], cost: 0, reward: 0, result: 0 };
+  return {
+    gameCode: "",
+    endTime: 0,
+    diceInfos: [],
+    betInfos: [],
+    cost: 0,
+    reward: 0,
+    result: 0,
+    ecolorBonusPlayerDetail: [],
+  };
 }
 
 export const ColorPlayerHistory = {
@@ -2003,6 +2470,9 @@ export const ColorPlayerHistory = {
     }
     if (message.result !== 0) {
       writer.uint32(56).int32(message.result);
+    }
+    for (const v of message.ecolorBonusPlayerDetail) {
+      EcolorBonusPlayerDetail.encode(v!, writer.uint32(66).fork()).ldelim();
     }
     return writer;
   },
@@ -2073,6 +2543,13 @@ export const ColorPlayerHistory = {
 
           message.result = reader.int32();
           continue;
+        case 8:
+          if (tag !== 66) {
+            break;
+          }
+
+          message.ecolorBonusPlayerDetail.push(EcolorBonusPlayerDetail.decode(reader, reader.uint32()));
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -2093,6 +2570,9 @@ export const ColorPlayerHistory = {
       cost: isSet(object.cost) ? globalThis.Number(object.cost) : 0,
       reward: isSet(object.reward) ? globalThis.Number(object.reward) : 0,
       result: isSet(object.result) ? globalThis.Number(object.result) : 0,
+      ecolorBonusPlayerDetail: globalThis.Array.isArray(object?.ecolorBonusPlayerDetail)
+        ? object.ecolorBonusPlayerDetail.map((e: any) => EcolorBonusPlayerDetail.fromJSON(e))
+        : [],
     };
   },
 
@@ -2119,6 +2599,9 @@ export const ColorPlayerHistory = {
     if (message.result !== 0) {
       obj.result = Math.round(message.result);
     }
+    if (message.ecolorBonusPlayerDetail?.length) {
+      obj.ecolorBonusPlayerDetail = message.ecolorBonusPlayerDetail.map((e) => EcolorBonusPlayerDetail.toJSON(e));
+    }
     return obj;
   },
 
@@ -2134,6 +2617,142 @@ export const ColorPlayerHistory = {
     message.cost = object.cost ?? 0;
     message.reward = object.reward ?? 0;
     message.result = object.result ?? 0;
+    message.ecolorBonusPlayerDetail =
+      object.ecolorBonusPlayerDetail?.map((e) => EcolorBonusPlayerDetail.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseEcolorBonusPlayerDetail(): EcolorBonusPlayerDetail {
+  return { userId: 0, bonusResult: 0, betAmount: 0, payoutAmount: 0, cardResult: 0, historyPayoutAmount: 0 };
+}
+
+export const EcolorBonusPlayerDetail = {
+  encode(message: EcolorBonusPlayerDetail, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.userId !== 0) {
+      writer.uint32(8).int64(message.userId);
+    }
+    if (message.bonusResult !== 0) {
+      writer.uint32(16).int32(message.bonusResult);
+    }
+    if (message.betAmount !== 0) {
+      writer.uint32(24).int64(message.betAmount);
+    }
+    if (message.payoutAmount !== 0) {
+      writer.uint32(32).int64(message.payoutAmount);
+    }
+    if (message.cardResult !== 0) {
+      writer.uint32(40).int32(message.cardResult);
+    }
+    if (message.historyPayoutAmount !== 0) {
+      writer.uint32(56).int64(message.historyPayoutAmount);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): EcolorBonusPlayerDetail {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEcolorBonusPlayerDetail();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.userId = longToNumber(reader.int64() as Long);
+          continue;
+        case 2:
+          if (tag !== 16) {
+            break;
+          }
+
+          message.bonusResult = reader.int32();
+          continue;
+        case 3:
+          if (tag !== 24) {
+            break;
+          }
+
+          message.betAmount = longToNumber(reader.int64() as Long);
+          continue;
+        case 4:
+          if (tag !== 32) {
+            break;
+          }
+
+          message.payoutAmount = longToNumber(reader.int64() as Long);
+          continue;
+        case 5:
+          if (tag !== 40) {
+            break;
+          }
+
+          message.cardResult = reader.int32();
+          continue;
+        case 7:
+          if (tag !== 56) {
+            break;
+          }
+
+          message.historyPayoutAmount = longToNumber(reader.int64() as Long);
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): EcolorBonusPlayerDetail {
+    return {
+      userId: isSet(object.user_id) ? globalThis.Number(object.user_id) : 0,
+      bonusResult: isSet(object.bonus_result) ? globalThis.Number(object.bonus_result) : 0,
+      betAmount: isSet(object.bet_amount) ? globalThis.Number(object.bet_amount) : 0,
+      payoutAmount: isSet(object.payout_amount) ? globalThis.Number(object.payout_amount) : 0,
+      cardResult: isSet(object.card_result) ? globalThis.Number(object.card_result) : 0,
+      historyPayoutAmount: isSet(object.history_payout_amount) ? globalThis.Number(object.history_payout_amount) : 0,
+    };
+  },
+
+  toJSON(message: EcolorBonusPlayerDetail): unknown {
+    const obj: any = {};
+    if (message.userId !== 0) {
+      obj.user_id = Math.round(message.userId);
+    }
+    if (message.bonusResult !== 0) {
+      obj.bonus_result = Math.round(message.bonusResult);
+    }
+    if (message.betAmount !== 0) {
+      obj.bet_amount = Math.round(message.betAmount);
+    }
+    if (message.payoutAmount !== 0) {
+      obj.payout_amount = Math.round(message.payoutAmount);
+    }
+    if (message.cardResult !== 0) {
+      obj.card_result = Math.round(message.cardResult);
+    }
+    if (message.historyPayoutAmount !== 0) {
+      obj.history_payout_amount = Math.round(message.historyPayoutAmount);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<EcolorBonusPlayerDetail>, I>>(base?: I): EcolorBonusPlayerDetail {
+    return EcolorBonusPlayerDetail.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<EcolorBonusPlayerDetail>, I>>(object: I): EcolorBonusPlayerDetail {
+    const message = createBaseEcolorBonusPlayerDetail();
+    message.userId = object.userId ?? 0;
+    message.bonusResult = object.bonusResult ?? 0;
+    message.betAmount = object.betAmount ?? 0;
+    message.payoutAmount = object.payoutAmount ?? 0;
+    message.cardResult = object.cardResult ?? 0;
+    message.historyPayoutAmount = object.historyPayoutAmount ?? 0;
     return message;
   },
 };
@@ -2195,6 +2814,335 @@ export const GetColorPlayerHistoryRes = {
   fromPartial<I extends Exact<DeepPartial<GetColorPlayerHistoryRes>, I>>(object: I): GetColorPlayerHistoryRes {
     const message = createBaseGetColorPlayerHistoryRes();
     message.colorPlayerHistory = object.colorPlayerHistory?.map((e) => ColorPlayerHistory.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseGetWinnerDoubleUpBonusInfoReq(): GetWinnerDoubleUpBonusInfoReq {
+  return {};
+}
+
+export const GetWinnerDoubleUpBonusInfoReq = {
+  encode(_: GetWinnerDoubleUpBonusInfoReq, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): GetWinnerDoubleUpBonusInfoReq {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetWinnerDoubleUpBonusInfoReq();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(_: any): GetWinnerDoubleUpBonusInfoReq {
+    return {};
+  },
+
+  toJSON(_: GetWinnerDoubleUpBonusInfoReq): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<GetWinnerDoubleUpBonusInfoReq>, I>>(base?: I): GetWinnerDoubleUpBonusInfoReq {
+    return GetWinnerDoubleUpBonusInfoReq.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<GetWinnerDoubleUpBonusInfoReq>, I>>(_: I): GetWinnerDoubleUpBonusInfoReq {
+    const message = createBaseGetWinnerDoubleUpBonusInfoReq();
+    return message;
+  },
+};
+
+function createBaseGetWinnerDoubleUpBonusInfoRes(): GetWinnerDoubleUpBonusInfoRes {
+  return { betAmount: 0, payOutAmount: 0, doubleUpBonusWinAmount: 0 };
+}
+
+export const GetWinnerDoubleUpBonusInfoRes = {
+  encode(message: GetWinnerDoubleUpBonusInfoRes, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.betAmount !== 0) {
+      writer.uint32(8).int64(message.betAmount);
+    }
+    if (message.payOutAmount !== 0) {
+      writer.uint32(16).int64(message.payOutAmount);
+    }
+    if (message.doubleUpBonusWinAmount !== 0) {
+      writer.uint32(24).int64(message.doubleUpBonusWinAmount);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): GetWinnerDoubleUpBonusInfoRes {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetWinnerDoubleUpBonusInfoRes();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.betAmount = longToNumber(reader.int64() as Long);
+          continue;
+        case 2:
+          if (tag !== 16) {
+            break;
+          }
+
+          message.payOutAmount = longToNumber(reader.int64() as Long);
+          continue;
+        case 3:
+          if (tag !== 24) {
+            break;
+          }
+
+          message.doubleUpBonusWinAmount = longToNumber(reader.int64() as Long);
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetWinnerDoubleUpBonusInfoRes {
+    return {
+      betAmount: isSet(object.betAmount) ? globalThis.Number(object.betAmount) : 0,
+      payOutAmount: isSet(object.payOutAmount) ? globalThis.Number(object.payOutAmount) : 0,
+      doubleUpBonusWinAmount: isSet(object.doubleUpBonusWinAmount)
+        ? globalThis.Number(object.doubleUpBonusWinAmount)
+        : 0,
+    };
+  },
+
+  toJSON(message: GetWinnerDoubleUpBonusInfoRes): unknown {
+    const obj: any = {};
+    if (message.betAmount !== 0) {
+      obj.betAmount = Math.round(message.betAmount);
+    }
+    if (message.payOutAmount !== 0) {
+      obj.payOutAmount = Math.round(message.payOutAmount);
+    }
+    if (message.doubleUpBonusWinAmount !== 0) {
+      obj.doubleUpBonusWinAmount = Math.round(message.doubleUpBonusWinAmount);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<GetWinnerDoubleUpBonusInfoRes>, I>>(base?: I): GetWinnerDoubleUpBonusInfoRes {
+    return GetWinnerDoubleUpBonusInfoRes.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<GetWinnerDoubleUpBonusInfoRes>, I>>(
+    object: I,
+  ): GetWinnerDoubleUpBonusInfoRes {
+    const message = createBaseGetWinnerDoubleUpBonusInfoRes();
+    message.betAmount = object.betAmount ?? 0;
+    message.payOutAmount = object.payOutAmount ?? 0;
+    message.doubleUpBonusWinAmount = object.doubleUpBonusWinAmount ?? 0;
+    return message;
+  },
+};
+
+function createBasePlayDoubleUpBonusReq(): PlayDoubleUpBonusReq {
+  return { cardColor: 0 };
+}
+
+export const PlayDoubleUpBonusReq = {
+  encode(message: PlayDoubleUpBonusReq, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.cardColor !== 0) {
+      writer.uint32(8).int32(message.cardColor);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PlayDoubleUpBonusReq {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePlayDoubleUpBonusReq();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.cardColor = reader.int32();
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PlayDoubleUpBonusReq {
+    return { cardColor: isSet(object.cardColor) ? globalThis.Number(object.cardColor) : 0 };
+  },
+
+  toJSON(message: PlayDoubleUpBonusReq): unknown {
+    const obj: any = {};
+    if (message.cardColor !== 0) {
+      obj.cardColor = Math.round(message.cardColor);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<PlayDoubleUpBonusReq>, I>>(base?: I): PlayDoubleUpBonusReq {
+    return PlayDoubleUpBonusReq.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<PlayDoubleUpBonusReq>, I>>(object: I): PlayDoubleUpBonusReq {
+    const message = createBasePlayDoubleUpBonusReq();
+    message.cardColor = object.cardColor ?? 0;
+    return message;
+  },
+};
+
+function createBasePlayDoubleUpBonusRes(): PlayDoubleUpBonusRes {
+  return { result: 0, card: 0, betAmount: 0, payOutAmount: 0, doubleUpBonusWinAmount: 0, playerCoins: 0 };
+}
+
+export const PlayDoubleUpBonusRes = {
+  encode(message: PlayDoubleUpBonusRes, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.result !== 0) {
+      writer.uint32(8).int32(message.result);
+    }
+    if (message.card !== 0) {
+      writer.uint32(16).int32(message.card);
+    }
+    if (message.betAmount !== 0) {
+      writer.uint32(24).int64(message.betAmount);
+    }
+    if (message.payOutAmount !== 0) {
+      writer.uint32(32).int64(message.payOutAmount);
+    }
+    if (message.doubleUpBonusWinAmount !== 0) {
+      writer.uint32(40).int64(message.doubleUpBonusWinAmount);
+    }
+    if (message.playerCoins !== 0) {
+      writer.uint32(48).int64(message.playerCoins);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PlayDoubleUpBonusRes {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePlayDoubleUpBonusRes();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.result = reader.int32();
+          continue;
+        case 2:
+          if (tag !== 16) {
+            break;
+          }
+
+          message.card = reader.int32();
+          continue;
+        case 3:
+          if (tag !== 24) {
+            break;
+          }
+
+          message.betAmount = longToNumber(reader.int64() as Long);
+          continue;
+        case 4:
+          if (tag !== 32) {
+            break;
+          }
+
+          message.payOutAmount = longToNumber(reader.int64() as Long);
+          continue;
+        case 5:
+          if (tag !== 40) {
+            break;
+          }
+
+          message.doubleUpBonusWinAmount = longToNumber(reader.int64() as Long);
+          continue;
+        case 6:
+          if (tag !== 48) {
+            break;
+          }
+
+          message.playerCoins = longToNumber(reader.int64() as Long);
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PlayDoubleUpBonusRes {
+    return {
+      result: isSet(object.result) ? globalThis.Number(object.result) : 0,
+      card: isSet(object.card) ? globalThis.Number(object.card) : 0,
+      betAmount: isSet(object.betAmount) ? globalThis.Number(object.betAmount) : 0,
+      payOutAmount: isSet(object.payOutAmount) ? globalThis.Number(object.payOutAmount) : 0,
+      doubleUpBonusWinAmount: isSet(object.doubleUpBonusWinAmount)
+        ? globalThis.Number(object.doubleUpBonusWinAmount)
+        : 0,
+      playerCoins: isSet(object.playerCoins) ? globalThis.Number(object.playerCoins) : 0,
+    };
+  },
+
+  toJSON(message: PlayDoubleUpBonusRes): unknown {
+    const obj: any = {};
+    if (message.result !== 0) {
+      obj.result = Math.round(message.result);
+    }
+    if (message.card !== 0) {
+      obj.card = Math.round(message.card);
+    }
+    if (message.betAmount !== 0) {
+      obj.betAmount = Math.round(message.betAmount);
+    }
+    if (message.payOutAmount !== 0) {
+      obj.payOutAmount = Math.round(message.payOutAmount);
+    }
+    if (message.doubleUpBonusWinAmount !== 0) {
+      obj.doubleUpBonusWinAmount = Math.round(message.doubleUpBonusWinAmount);
+    }
+    if (message.playerCoins !== 0) {
+      obj.playerCoins = Math.round(message.playerCoins);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<PlayDoubleUpBonusRes>, I>>(base?: I): PlayDoubleUpBonusRes {
+    return PlayDoubleUpBonusRes.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<PlayDoubleUpBonusRes>, I>>(object: I): PlayDoubleUpBonusRes {
+    const message = createBasePlayDoubleUpBonusRes();
+    message.result = object.result ?? 0;
+    message.card = object.card ?? 0;
+    message.betAmount = object.betAmount ?? 0;
+    message.payOutAmount = object.payOutAmount ?? 0;
+    message.doubleUpBonusWinAmount = object.doubleUpBonusWinAmount ?? 0;
+    message.playerCoins = object.playerCoins ?? 0;
     return message;
   },
 };

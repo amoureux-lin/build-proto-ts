@@ -240,12 +240,20 @@ function flattenBundleOutput(outputDir, bundleName) {
  * 将生成文件中的 "protobufjs/minimal"、"long" 等 import 替换为配置路径，便于 Cocos Creator 等环境解析。
  */
 function rewriteRuntimeImports(outputDir, tsProto) {
-  if (!tsProto || (!tsProto.protobufjsMinimalImport && !tsProto.longImport)) return;
+  // ts-proto 默认会生成 `from "protobufjs/minimal"`。
+  // 这里默认替换为 `from "protobufjs"`，以适配多数 Node/Web bundler 的解析方式；
+  // 如需自定义（例如 Cocos 工程内相对路径，或仍使用 minimal），可在 protoConfig.json 的 tsProto 中配置。
+  const protobufjsImport =
+    (tsProto && typeof tsProto.protobufjsImport === 'string' && tsProto.protobufjsImport.trim()) ||
+    (tsProto && typeof tsProto.protobufjsMinimalImport === 'string' && tsProto.protobufjsMinimalImport.trim()) ||
+    'protobufjs';
+
+  if (!tsProto || (!protobufjsImport && !tsProto.longImport)) return;
   const replacers = [];
-  if (tsProto.protobufjsMinimalImport) {
+  if (protobufjsImport) {
     replacers.push([
       /from\s+["']protobufjs\/minimal["']/g,
-      `from "${tsProto.protobufjsMinimalImport.replace(/\\/g, '/')}"`,
+      `from "${protobufjsImport.replace(/\\/g, '/')}"`,
     ]);
   }
   if (tsProto.longImport) {

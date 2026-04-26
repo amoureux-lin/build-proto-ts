@@ -97,6 +97,7 @@ message JoinRoomRes {
   repeated common.v1.PlayerInfo speakers = 5; // 开麦用户列表
   TongitsPlayerInfo self = 6; // 自己信息
   GameInfo game_info = 7; // 游戏信息
+  common.v1.PlayerSettings player_settings = 8; // 玩家设置
 }
 
 // 开始游戏
@@ -369,3 +370,11 @@ message TongitsHistoryInfo {
   int32 total_reward = 13 ; // 总计
 }
 
+
+
+// 游戏即将开始倒计时 (满2人触发)
+// MessageType: TONGITS_GAME_READY_BROADCAST (3035)
+message GameReadyBroadcast {
+  int32 countdown_seconds = 1; // 倒计时秒数 (如: 3)
+  int64 start_time = 2;        // 绝对开始时间戳
+}

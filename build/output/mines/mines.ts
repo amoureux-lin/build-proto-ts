@@ -6,8 +6,8 @@
 
 /* eslint-disable */
 import Long from "long";
-import _m0 from "protobufjs/minimal";
-import { PlayerInfo } from "./game_common_room";
+import _m0 from "protobufjs";
+import { PlayerInfo, PlayerSettings } from "./game_common_room";
 
 export const protobufPackage = "mines.v1";
 
@@ -280,6 +280,8 @@ export interface JoinRoomRes {
   players: MinesPlayer[];
   /** 麦位列表 */
   speakers: PlayerInfo[];
+  /** 玩家设置 */
+  playerSettings: PlayerSettings | undefined;
 }
 
 /**
@@ -1722,6 +1724,7 @@ function createBaseJoinRoomRes(): JoinRoomRes {
     playersCount: 0,
     players: [],
     speakers: [],
+    playerSettings: undefined,
   };
 }
 
@@ -1747,6 +1750,9 @@ export const JoinRoomRes = {
     }
     for (const v of message.speakers) {
       PlayerInfo.encode(v!, writer.uint32(58).fork()).ldelim();
+    }
+    if (message.playerSettings !== undefined) {
+      PlayerSettings.encode(message.playerSettings, writer.uint32(66).fork()).ldelim();
     }
     return writer;
   },
@@ -1807,6 +1813,13 @@ export const JoinRoomRes = {
 
           message.speakers.push(PlayerInfo.decode(reader, reader.uint32()));
           continue;
+        case 8:
+          if (tag !== 66) {
+            break;
+          }
+
+          message.playerSettings = PlayerSettings.decode(reader, reader.uint32());
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1829,6 +1842,7 @@ export const JoinRoomRes = {
       speakers: globalThis.Array.isArray(object?.speakers)
         ? object.speakers.map((e: any) => PlayerInfo.fromJSON(e))
         : [],
+      playerSettings: isSet(object.playerSettings) ? PlayerSettings.fromJSON(object.playerSettings) : undefined,
     };
   },
 
@@ -1855,6 +1869,9 @@ export const JoinRoomRes = {
     if (message.speakers?.length) {
       obj.speakers = message.speakers.map((e) => PlayerInfo.toJSON(e));
     }
+    if (message.playerSettings !== undefined) {
+      obj.playerSettings = PlayerSettings.toJSON(message.playerSettings);
+    }
     return obj;
   },
 
@@ -1876,6 +1893,9 @@ export const JoinRoomRes = {
     message.playersCount = object.playersCount ?? 0;
     message.players = object.players?.map((e) => MinesPlayer.fromPartial(e)) || [];
     message.speakers = object.speakers?.map((e) => PlayerInfo.fromPartial(e)) || [];
+    message.playerSettings = (object.playerSettings !== undefined && object.playerSettings !== null)
+      ? PlayerSettings.fromPartial(object.playerSettings)
+      : undefined;
     return message;
   },
 };

@@ -2,7 +2,7 @@
  * 由构建脚本根据 proto 生成，请勿手改。
  */
 import type { MessageMapping } from 'db://nexus-framework/index';
-import { JoinRoomReq, JoinRoomRes, StartGameReq, StartGameRes, GameStartBroadcast, TongitsReq, TongitsRes, DrawCardReq, DrawCardRes, DrawCardBroadcast, MeldCardReq, MeldCardRes, MeldCardBroadcast, LayOffCardReq, LayOffCardRes, LayOffCardBroadcast, DiscardCardReq, DiscardCardRes, DiscardCardBroadcast, TakeCardReq, TakeCardRes, TakeCardBroadcast, ChallengeReq, ChallengeRes, ChallengeBroadcast, PKBroadcast, GameResultBroadcast, RoomResetBroadcast, ActionChangeBroadcast, BeforeResultBroadcast, GameResultDetailsReq, GameResultDetailsRes, GetPlayerHistoryReq, GetPlayerHistoryRes } from './tongits';
+import { JoinRoomReq, JoinRoomRes, StartGameReq, StartGameRes, GameStartBroadcast, TongitsReq, TongitsRes, DrawCardReq, DrawCardRes, DrawCardBroadcast, MeldCardReq, MeldCardRes, MeldCardBroadcast, LayOffCardReq, LayOffCardRes, LayOffCardBroadcast, DiscardCardReq, DiscardCardRes, DiscardCardBroadcast, TakeCardReq, TakeCardRes, TakeCardBroadcast, ChallengeReq, ChallengeRes, ChallengeBroadcast, PKBroadcast, GameResultBroadcast, RoomResetBroadcast, ActionChangeBroadcast, BeforeResultBroadcast, GameResultDetailsReq, GameResultDetailsRes, GetPlayerHistoryReq, GetPlayerHistoryRes, GameReadyBroadcast } from './tongits';
 import { MessageType } from './message_type';
 
 /** 从 Writer 得到 Uint8Array（ts_proto 的 encode 返回 Writer） */
@@ -180,5 +180,10 @@ export const TONGITS_MSG_REGISTRY: Record<number, MessageMapping> = {
         decode: (buf) => GetPlayerHistoryRes.decode(buf),
         encode: (msg) => finish(GetPlayerHistoryRes.encode(msg as GetPlayerHistoryRes)),
         name: 'GetPlayerHistoryRes',
+    },
+    [MessageType.TONGITS_GAME_READY_BROADCAST]: {
+        decode: (buf) => GameReadyBroadcast.decode(buf),
+        encode: (msg) => finish(GameReadyBroadcast.encode(msg as GameReadyBroadcast)),
+        name: 'GameReadyBroadcast',
     },
 };

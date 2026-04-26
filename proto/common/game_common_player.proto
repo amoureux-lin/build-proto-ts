@@ -31,20 +31,56 @@ message JoinRoomBroadcast {
 // 玩家退出房间请求
 // MessageType: COMMON_PLAYER_EXIT_ROOM_REQ
 message PlayerExitRoomReq {
+  ExitRoomIntent intent = 1; // 立即退出或预约退出
 }
 
 // 玩家退出房间返回
 // MessageType: COMMON_PLAYER_EXIT_ROOM_RES
 message PlayerExitRoomRes {
+  RoomActionAcceptStatus status = 1; // 退出房间响应状态
+  PendingRoomAction active_pending_action = 2; // 当前最新预约动作
 }
 
-//玩家离开房间广播
+// 其他玩家离开房间广播
 // MessageType: COMMON_LEAVE_ROOM_BROADCAST
 message LeaveRoomBroadcast {
   int64 bc_uid = 4;
   int64 user_id = 1;
   PlayerInfo player = 2;
   int32 players_count = 3;
+}
+
+// 自己已离开房间广播（只广播给自己）
+// MessageType: COMMON_SELF_LEFT_ROOM_BROADCAST
+message SelfLeftRoomBroadcast {
+  int64 room_id = 1;
+  int64 user_id = 2;
+  PlayerInfo player = 3;
+  int32 players_count = 4;
+  int64 bc_uid = 5;
+  SelfLeftRoomReason reason = 6;
+}
+
+// 玩家换房请求
+// MessageType: COMMON_PLAYER_SWITCH_ROOM_REQ
+message PlayerSwitchRoomReq {
+}
+
+// 玩家换房响应
+// MessageType: COMMON_PLAYER_SWITCH_ROOM_RES
+message PlayerSwitchRoomRes {
+  RoomActionAcceptStatus status = 1;
+  PendingRoomAction active_pending_action = 2;
+}
+
+// 换房广播
+// MessageType: COMMON_SWITCH_ROOM_BROADCAST
+message SwitchRoomBroadcast {
+  int64 room_id = 1; // 目标房间ID
+  int64 score = 2; // 目标房间底分
+  string op_id = 3; // 本次换房操作ID
+  int64 state_ver = 4; // Gateway PendingJoin 状态版本
+  int64 expire_at = 5; // 本次换房等待过期时间，Unix 时间戳（秒）
 }
 
 // 玩家坐下请求
@@ -82,9 +118,10 @@ message PlayerStandUpRes {
 // 玩家站起广播
 // MessageType: COMMON_STAND_UP_BROADCAST
 message StandUpBroadcast {
-  int64 bc_uid = 3;
+  int64 bc_uid = 3; // 废弃字段
   int64 user_id = 1;
   PlayerInfo player = 2;
+  StandUpReason reason = 4; // 站起原因
 }
 
 // 玩家准备游戏请求
@@ -117,7 +154,16 @@ message UserInfoUpdateBroadcast {
   int64 coins = 2;
 }
 
+// 玩家设置请求
+// MessageType: COMMON_PLAYER_SETTINGS_REQ
+message PlayerSettingsReq {
+  PlayerSettings settings = 1;
+}
 
+// 玩家设置响应
+// MessageType: COMMON_PLAYER_SETTINGS_RES
+message PlayerSettingsRes {
+}
 
 // 获取玩家历史记录概要请求
 // MessageType: COMMON_GET_HISTORY_SUMMARY_REQ

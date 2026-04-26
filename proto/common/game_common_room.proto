@@ -20,6 +20,36 @@ message RoomInfo {
   int32 room_mode = 5; // 房间模式 0: 游戏模式 1: 房主模式
 }
 
+enum ExitRoomIntent {
+  EXIT_ROOM_INTENT_UNSPECIFIED = 0;
+  EXIT_ROOM_INTENT_IMMEDIATE = 1; // 立即退出
+  EXIT_ROOM_INTENT_NEXT_HAND_LEAVE = 2; // 预约退出
+}
+
+// 预约动作
+enum PendingRoomAction {
+  PENDING_ROOM_ACTION_NONE = 0; // 无预约动作
+  PENDING_ROOM_ACTION_SWITCH_ROOM = 1; // 预约换房
+  PENDING_ROOM_ACTION_LEAVE_ROOM = 2; // 预约离开
+}
+
+// 预约动作响应状态
+enum RoomActionAcceptStatus {
+  ROOM_ACTION_ACCEPT_STATUS_UNSPECIFIED = 0; // 未指定，通常不应返回给客户端
+  ROOM_ACTION_ACCEPT_STATUS_EXECUTING = 1; // 请求已受理并立即执行
+  ROOM_ACTION_ACCEPT_STATUS_DEFERRED = 2; // 请求已受理，但需等待当前局结束后再执行
+  ROOM_ACTION_ACCEPT_STATUS_CANCELED = 3; // 重复点击同一预约动作，已取消
+  ROOM_ACTION_ACCEPT_STATUS_ALREADY_PENDING = 4; // 玩家已有一个进行中动作，当前请求未生效
+}
+
+// 自己离开房间的原因
+enum SelfLeftRoomReason {
+  SELF_LEFT_ROOM_REASON_UNSPECIFIED = 0; // 未指定原因
+  SELF_LEFT_ROOM_REASON_ACTIVE_EXIT = 1; // 玩家主动立即退出
+  SELF_LEFT_ROOM_REASON_NEXT_HAND_LEAVE_EXECUTED = 2; // 预约离开在当前局结束后执行
+  SELF_LEFT_ROOM_REASON_KICKED = 3; // 被系统或房间管理逻辑移出房间
+}
+
 // 默认的符合前端玩家信息结构的proto
 message DefaultPlayerInfo {
   PlayerInfo player_info = 1; // 玩家信息，字段命名需要与前端约定一致
@@ -34,13 +64,19 @@ message PlayerInfo {
   int32 seat = 5;
   int32 role = 6;   // 角色 0: 未知 1: 旁观 2: 玩家
   int32 post = 11;   // 职位 0: 普通玩家 1: 房主 2: 管理员
-  int32 state = 7;  // 状态 0: 在线 1: 准备 2: 游戏中 3: 离线 4: 离开
+  int32 state = 7;  // 状态 0: 在线 1: 准备 2: 游戏中 3: 离线 4: 离开 5: 已坐下
   int64 coin_changed = 13; // 金币变化量
   int32 mic_allow_status = 8; // 麦克风允许状态 0: 不允许 1: 申请中 2: 允许
   bool mic_on = 9; // 麦克风是否开启
   int64 next_mic_request_time = 10; // 下次允许申请开麦时间（时间戳/秒）
   int64 mic_request_expired_time = 12; // 开麦申请过期时间（时间戳/秒）
   int64 wait_ready_expired_time = 14; // 等待玩家准备倒计时的结束时间，单位秒。为0表示没有开启倒计时
+  PendingRoomAction active_pending_action = 15; // 当前玩家生效中的预约动作
+}
+
+// 玩家设置
+message PlayerSettings {
+  map<string, int64> numeric_settings = 1;
 }
 
 message BarrageInfo {
@@ -271,6 +307,15 @@ message OwnerKickOutOfRoomBroadcast {
   int64 player_id = 2; // 被踢出的玩家ID
 }
 
+message SystemKickOutOfRoomReq {
+  int64 room_id = 1;
+  int64 user_id = 2;
+}
+
+message SystemKickOutOfRoomRes {
+  int64 user_id = 1;
+}
+
 // 房主踢人下座请求
 // MessageType: ROOM_OWNER_KICK_OFF_SEAT_REQ
 message OwnerKickOffSeatReq {
@@ -307,4 +352,10 @@ message OwnerChangeScoreRes {
 message OwnerChangeScoreBroadcast {
   int64 bc_uid = 1;
   int32 new_score = 2; // 新底分
+}
+
+// 玩家站起原因
+enum StandUpReason {
+  STAND_UP_REASON_DEFAULT = 0; // 默认原因
+  STAND_UP_REASON_PLAYER_LESS_COIN = 1; // 钱不够被踢下座
 }

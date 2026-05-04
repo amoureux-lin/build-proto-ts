@@ -34,17 +34,21 @@ build/output/
 
 ## Cocos Creator 中找不到 "protobufjs/minimal"
 
-生成代码使用 `import _m0 from "protobufjs/minimal"`，Cocos 无法解析 npm 包名。可在 **protoConfig.json** 中配置替换路径，构建时会改写所有生成 .ts 的 import：
+ts-proto 默认生成 `import _m0 from "protobufjs/minimal"`。本工具**默认会把它改写成** `import _m0 from "protobufjs"`，以便在多数 Node/Web 环境直接运行。
+
+如果你在 Cocos Creator 之类的环境里无法解析 npm 包名，或希望改写为工程内相对路径，可在 **protoConfig.json** 中配置替换路径，构建时会改写所有生成 .ts 的 import：
 
 ```json
 {
   "tsProto": {
+    "protobufjsImport": "./lib/protobufjs",
     "protobufjsMinimalImport": "./lib/protobufjs-minimal",
     "longImport": "./lib/long"
   }
 }
 ```
 
+- **protobufjsImport**：替换 `from "protobufjs/minimal"`（推荐使用这个字段）。例如需要改写成 Cocos 工程内的相对路径。
 - **protobufjsMinimalImport**：替换 `from "protobufjs/minimal"`。填相对生成文件的路径，例如在 Cocos 里把 protobufjs 的 minimal 导出放到 `assets/.../lib/protobufjs-minimal.ts`，则用 `"./lib/protobufjs-minimal"`。
 - **longImport**：替换 `from "long"`，可选。
 

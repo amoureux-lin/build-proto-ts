@@ -25,6 +25,7 @@ export function normalizeProtoConfig(rawConfig) {
   const errorCode = rawConfig?.errorCode ?? {};
 
   const tsProto = rawConfig?.tsProto ?? {};
+  const importRewritesRaw = Array.isArray(tsProto.importRewrites) ? tsProto.importRewrites : [];
   return {
     messageTypes,
     bundles,
@@ -36,8 +37,15 @@ export function normalizeProtoConfig(rawConfig) {
       plannerCsvPath: paths.plannerCsvPath ?? null,
     },
     tsProto: {
+      protobufjsImport: typeof tsProto.protobufjsImport === 'string' ? tsProto.protobufjsImport.trim() : null,
       protobufjsMinimalImport: typeof tsProto.protobufjsMinimalImport === 'string' ? tsProto.protobufjsMinimalImport.trim() : null,
       longImport: typeof tsProto.longImport === 'string' ? tsProto.longImport.trim() : null,
+      importRewrites: importRewritesRaw
+        .map((r) => ({
+          from: typeof r?.from === 'string' ? r.from.trim() : '',
+          to: typeof r?.to === 'string' ? r.to.trim() : '',
+        }))
+        .filter((r) => r.from && r.to),
     },
     errorCode: {
       enabled: errorCode.enabled ?? true,

@@ -6,7 +6,7 @@
 
 /* eslint-disable */
 import Long from "long";
-import _m0 from "protobufjs/minimal";
+import _m0 from "protobufjs";
 import { PlayerInfo, PlayerSettings, RoomInfo } from "./game_common_room";
 
 export const protobufPackage = "color.v1";

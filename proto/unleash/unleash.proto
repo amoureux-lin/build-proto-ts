@@ -62,6 +62,7 @@ message JoinRoomRes {
   repeated common.v1.PlayerInfo watchers = 5; // 房间内观战玩家列表
   repeated common.v1.PlayerInfo speakers = 6; // 麦位列表
   repeated UnleashPlayerInfo players = 7; // 落座玩家列表
+  common.v1.PlayerSettings player_settings = 8; // 玩家设置
 }
 
 // 开始游戏请求

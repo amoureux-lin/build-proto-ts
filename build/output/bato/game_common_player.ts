@@ -2,7 +2,7 @@
 // versions:
 //   protoc-gen-ts_proto  v1.181.2
 //   protoc               v7.34.0
-// source: common/game_common_player.proto
+// source: bato/game_common_player.proto
 
 /* eslint-disable */
 import Long from "long";

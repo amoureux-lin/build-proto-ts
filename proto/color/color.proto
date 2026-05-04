@@ -16,6 +16,16 @@ message ColorPlayerInfo {
   common.v1.PlayerInfo player_info = 1;     // 玩家信息
   repeated BetInfo bet_infos = 2;           // 玩家在每个颜色的打码信息
 }
+message ColorPlayerStrategy {
+  repeated int32 scores = 1;
+  repeated int32 area_bet_limit = 2;
+  repeated UserDefaultBetArea user_default_bet_areas = 3;
+  string user_level = 4;
+}
+
+message UserDefaultBetArea{
+  repeated string val = 1;  // 保持现有定义
+}
 
 // 打码信息
 message BetInfo {
@@ -23,6 +33,14 @@ message BetInfo {
   int32 bet_amount = 2;                     // 打码量
   int32 odds = 3;                           // 赔率
   int32 payout_amount =4;                   // 赔付金额
+}
+message DoubleUpBetInfo {
+  int32 bet_amount = 1;                     // color 赢的部分打码金额固定
+  int32 payout_amount =2;                   // 参与Double Up Bonus的打码金额赢的时候的更新为2倍
+  string game_code = 3;                     // 游戏局号
+  int32 bonus_seq = 4;                      // Double Up Bonus 序号
+  int32 base_payout_amount = 5;                // color的payout固定值 在最后输了的时候用这个值计算
+  int64 base_start_time = 6;                 // baseGame开始时间
 }
 
 // 结算玩家信息
@@ -41,6 +59,7 @@ message GameInfo {
   repeated int32 dice_infos = 6;            // 骰子信息
   repeated SettlePlayer settle_players = 7; // 结算玩家列表
   repeated int32 player_bet_limit=8;                 // 玩家打码上限
+  string bet_config = 9;
 }
 
 // 进入房间请求
@@ -57,6 +76,7 @@ message JoinRoomRes {
   int32 players_count = 3;                   // 房间内所有玩家数量
   repeated ColorPlayerInfo players = 4;      // 所有玩家信息
   ColorPlayerInfo self = 5;                  // 玩家自己的信息
+  common.v1.PlayerSettings player_settings = 6; // 玩家设置
 }
 
 // 开始游戏请求
@@ -147,10 +167,56 @@ message ColorPlayerHistory{
   int32 reward=6;
   // Win/Lost
   int32 result=7;
-
+  //Double Up Bonus 信息
+  repeated EcolorBonusPlayerDetail ecolor_bonus_player_detail = 8;
+}
+message EcolorBonusPlayerDetail {
+  int64 user_id = 1 [json_name = "user_id"]; // 玩家id
+  int32 bonus_result = 2 [json_name = "bonus_result"]; // bonus结果 1:成功 2：失败
+  int64 bet_amount = 3 [json_name = "bet_amount"]; // 参与bonus的打码值
+  int64 payout_amount = 4 [json_name = "payout_amount"]; // bonus的输赢
+  int32 card_result = 5 [json_name = "card_result"]; // 本次double up bonus结果 1-52卡牌数字
+  int64 history_payout_amount = 7 [json_name = "history_payout_amount"];
 }
 //获取玩家EColor游戏历史记录响应
 // MessageType: COLOR_GET_PLAYER_HISTORY_RES
 message GetColorPlayerHistoryRes{
   repeated ColorPlayerHistory color_player_history = 1;
+}
+//获取赢的玩家的Double Up Bonus信息请求
+// MessageType: COLOR_GET_PLAYER_DOUBLE_UP_BONUS_INFO_REQ
+message GetWinnerDoubleUpBonusInfoReq{
+}
+//获取赢的玩家的Double Up Bonus信息响应
+// MessageType: COLOR_GET_PLAYER_DOUBLE_UP_BONUS_INFO_RES
+message GetWinnerDoubleUpBonusInfoRes{
+  //玩家打码金额
+  int64 bet_amount=1;
+  //赔付玩家金额
+  int64 pay_out_amount=2;
+  //Double Up Bonus win金额
+  int64 double_up_bonus_win_amount=3;
+}
+
+//Play Double Up Bonus 请求
+// MessageType: COLOR_PLAY_DOUBLE_UP_BONUS_REQ
+message PlayDoubleUpBonusReq{
+  //选牌 1 红 2黑
+  int32 card_color=1;
+}
+//Play Double Up Bonus 响应
+// MessageType: COLOR_PLAY_DOUBLE_UP_BONUS_RES
+message PlayDoubleUpBonusRes{
+  //结果1赢 2输
+  int32 result=1;
+  //52张牌
+  int32 card=2;
+  //玩家打码金额
+  int64 bet_amount=3;
+  //赔付玩家金额
+  int64 pay_out_amount=4;
+  //Double Up Bonus win金额
+  int64 double_up_bonus_win_amount=5;
+
+  int64 player_coins=6;
 }

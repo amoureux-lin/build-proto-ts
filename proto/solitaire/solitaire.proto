@@ -24,6 +24,7 @@ message JoinRoomRes {
   repeated common.v1.PlayerInfo speakers = 5; // 开麦用户列表
   SolitairePayerInfo self = 6; // 自己信息
   GameInfo game_info = 7; // 游戏信息
+  common.v1.PlayerSettings player_settings = 8; // 玩家设置
 }
 
 

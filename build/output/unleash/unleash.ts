@@ -7,7 +7,7 @@
 /* eslint-disable */
 import Long from "long";
 import _m0 from "protobufjs/minimal";
-import { PlayerInfo, RoomInfo } from "./game_common_room";
+import { PlayerInfo, PlayerSettings, RoomInfo } from "./game_common_room";
 
 export const protobufPackage = "unleash.v1";
 
@@ -154,6 +154,8 @@ export interface JoinRoomRes {
   speakers: PlayerInfo[];
   /** 落座玩家列表 */
   players: UnleashPlayerInfo[];
+  /** 玩家设置 */
+  playerSettings: PlayerSettings | undefined;
 }
 
 /**
@@ -901,6 +903,7 @@ function createBaseJoinRoomRes(): JoinRoomRes {
     watchers: [],
     speakers: [],
     players: [],
+    playerSettings: undefined,
   };
 }
 
@@ -926,6 +929,9 @@ export const JoinRoomRes = {
     }
     for (const v of message.players) {
       UnleashPlayerInfo.encode(v!, writer.uint32(58).fork()).ldelim();
+    }
+    if (message.playerSettings !== undefined) {
+      PlayerSettings.encode(message.playerSettings, writer.uint32(66).fork()).ldelim();
     }
     return writer;
   },
@@ -986,6 +992,13 @@ export const JoinRoomRes = {
 
           message.players.push(UnleashPlayerInfo.decode(reader, reader.uint32()));
           continue;
+        case 8:
+          if (tag !== 66) {
+            break;
+          }
+
+          message.playerSettings = PlayerSettings.decode(reader, reader.uint32());
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1010,6 +1023,7 @@ export const JoinRoomRes = {
       players: globalThis.Array.isArray(object?.players)
         ? object.players.map((e: any) => UnleashPlayerInfo.fromJSON(e))
         : [],
+      playerSettings: isSet(object.playerSettings) ? PlayerSettings.fromJSON(object.playerSettings) : undefined,
     };
   },
 
@@ -1036,6 +1050,9 @@ export const JoinRoomRes = {
     if (message.players?.length) {
       obj.players = message.players.map((e) => UnleashPlayerInfo.toJSON(e));
     }
+    if (message.playerSettings !== undefined) {
+      obj.playerSettings = PlayerSettings.toJSON(message.playerSettings);
+    }
     return obj;
   },
 
@@ -1057,6 +1074,9 @@ export const JoinRoomRes = {
     message.watchers = object.watchers?.map((e) => PlayerInfo.fromPartial(e)) || [];
     message.speakers = object.speakers?.map((e) => PlayerInfo.fromPartial(e)) || [];
     message.players = object.players?.map((e) => UnleashPlayerInfo.fromPartial(e)) || [];
+    message.playerSettings = (object.playerSettings !== undefined && object.playerSettings !== null)
+      ? PlayerSettings.fromPartial(object.playerSettings)
+      : undefined;
     return message;
   },
 };

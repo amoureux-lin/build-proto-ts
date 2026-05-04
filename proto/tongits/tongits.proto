@@ -21,13 +21,15 @@ message TongitsPlayerInfo {
   int32 hand_card_count = 2;              // 手牌数量 (对其他玩家可见)
   bool is_dealer = 3;                     // 是否是庄家
   repeated Meld displayed_melds = 4;      // 已经打出的牌组 (明牌)
-  repeated int32 hand_cards = 5;          // 自己的手牌
+  repeated int32 hand_cards = 5;          // 自己的手牌 老
   bool is_fight = 6;                     // 是否可以发起挑战
   int32 countdown = 7;                   // 时间戳
   int32 change_status = 8;               // 1:默认待选择 2:发起 3:接受 4:拒绝 5:烧死
   int32 status = 9;                      // 1:不可操作, 2:select, 3:Action
   bool is_win = 10;                      // 是否赢得比赛
   int32 card_point = 11;                  // 点数
+  bool is_auto = 12;                     // 自动组牌
+  repeated Cards group_cards = 13;          // 自己的手牌 新
 }
 
 
@@ -97,6 +99,7 @@ message JoinRoomRes {
   repeated common.v1.PlayerInfo speakers = 5; // 开麦用户列表
   TongitsPlayerInfo self = 6; // 自己信息
   GameInfo game_info = 7; // 游戏信息
+  common.v1.PlayerSettings player_settings = 8; // 玩家设置
 }
 
 // 开始游戏
@@ -138,6 +141,7 @@ message DrawCardRes {
   int32 drawn_card = 1; // 抽到的牌，只有自己知道
   bool has_tongits = 2; // 是否有Tongits
   int32 hand_card_count = 3;              // 手牌数量 (对其他玩家可见)
+  repeated Cards group_cards = 4;          // 自己的手牌  自己会有这个值
 }
 
 // 抽牌广播
@@ -147,6 +151,7 @@ message DrawCardBroadcast {
   int64 user_id = 2;
   int32 drawn_card = 3; // 当自动抽牌时  自己会有这个值
   int32 hand_card_count = 4;              // 手牌数量 (对其他玩家可见)
+  repeated Cards group_cards = 5;          // 自己的手牌  自己会有这个值
 }
 
 // 出牌
@@ -268,6 +273,7 @@ message ChallengeRes {
 message ChallengeBroadcast {
   int64 player_id = 1;
   repeated TongitsBasePlayerInfo basePlayers = 2;
+  int32 card_point = 3;                  // 点数
   int64 user_id = 4;
 }
 
@@ -305,6 +311,7 @@ message ActionChangeBroadcast {
   int32 countdown = 2;  // 倒计时
   bool is_fight = 3; // 是否可以发起挑战
   int32 status = 4;   // 1:不可操作, 2:select, 3:Action
+  repeated Cards group_cards = 5;  // 自己的手牌
   int64 user_id = 11; // 通知玩家id
 }
 
@@ -367,5 +374,47 @@ message TongitsHistoryInfo {
   int32 normal_reward = 11 ; // 普通奖励
   int32 pot_reward = 12 ; // pot池
   int32 total_reward = 13 ; // 总计
+}
+
+
+
+// 游戏即将开始倒计时 (满2人触发)
+// MessageType: TONGITS_GAME_READY_BROADCAST (3035)
+message GameReadyBroadcast {
+  int32 countdown_seconds = 1; // 倒计时秒数 (如: 3)
+  int64 start_time = 2;        // 绝对开始时间戳
+}
+
+// 开启/关闭自动组牌
+// MessageType: TONGITS_SWITCH_AUTO_GROUP_CARDS_REQ  (3036)
+message SwitchAutoGroupCardsReq {
+  bool is_auto = 1;
+}
+
+// 开启/关闭自动组牌
+// MessageType: TONGITS_SWITCH_AUTO_GROUP_CARDS_RES (3037)
+message SwitchAutoGroupCardsRes{
+  bool is_auto = 1;
+  repeated Cards group_cards = 2;  // 自己的手牌
+}
+
+// 玩家手动组牌
+// MessageType: TONGITS_GAME_PLAYER_GROUP_CARDS_REQ (3038)
+message GamePlayerGroupCardsReq{
+  repeated Cards target_group_cards = 1; // 需要变化的牌组列表  组成新的group 不需要传参
+}
+
+// 玩家手动组牌
+// MessageType: TONGITS_GAME_PLAYER_GROUP_CARDS_RES (3039)
+message GamePlayerGroupCardsRes{
+  repeated Cards group_cards = 1;
+}
+
+
+message Cards {
+  int32 group_id = 1;                     // 牌组id   0是散牌  1 ... 是牌组
+  repeated int32 hand_cards = 2;          // 牌组手牌
+  int32 card_type = 3 ;                  // 牌型 0 无效牌型 1 有效牌型 2特殊牌型
+  int32 card_point = 4;                  // 牌组点数
 }
 

@@ -50,8 +50,11 @@ export function normalizeProtoConfig(rawConfig) {
     errorCode: {
       enabled: errorCode.enabled ?? true,
       protoName: String(errorCode.protoName ?? 'error_codes').trim(),
+      wsCloseProtoName: String(errorCode.wsCloseProtoName ?? 'ws_err_code').trim(),
       sourceProtoPath: errorCode.sourceProtoPath ?? null,
+      wsCloseSourceProtoPath: errorCode.wsCloseSourceProtoPath ?? null,
       outputCsvPath: errorCode.outputCsvPath ?? null,
+      wsCloseOutputCsvPath: errorCode.wsCloseOutputCsvPath ?? null,
       plannerCsvPath: errorCode.plannerCsvPath ?? paths.plannerCsvPath ?? null,
       syncPlanner: errorCode.syncPlanner ?? true,
     },

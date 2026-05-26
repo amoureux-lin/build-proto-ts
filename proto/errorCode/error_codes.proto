@@ -111,26 +111,6 @@ enum ErrorCode {
   GAME_PLAYER_IS_GAME_OVER = 2309; // 玩家游戏已结束
   GAME_IS_OVER = 2310; // 游戏已结束
 
-  // 聊天服务错误 (3000-3500)
-  CHAT_GET_USER_INFO_FAILED = 3001;     // 获取用户信息失败
-  CHAT_ROOM_ID_INVALID = 3002;          // 房间ID无效
-  CHAT_SEAT_NUMBER_INVALID = 3003;      // 座位号无效
-  CHAT_PLAYER_NOT_IN_ANY_ROOM = 3004;   // 玩家不在任何房间中
-  CHAT_PLAYER_NOT_IN_SPECIFIED_ROOM = 3005; // 玩家不在指定房间中
-  CHAT_SENDER_NOT_IN_ROOM = 3006;       // 发送者不在聊天房间中
-  CHAT_TARGET_USER_NOT_IN_ANY_ROOM = 3007; // 目标用户不在任何房间中
-  CHAT_TARGET_USER_NOT_IN_SAME_ROOM = 3008; // 目标用户不在同一房间中
-  CHAT_CANNOT_GET_SENDER_INFO = 3009;   // 无法获取发送者信息
-  CHAT_ROOM_TYPE_INCORRECT = 3010;      // 房间类型不正确
-  CHAT_INVALID_MESSAGE_TYPE = 3011;     // 无效的聊天消息类型
-  CHAT_ROOM_EXISTS_BUT_NOT_CHAT = 3012; // 房间已存在但不是聊天房间
-  CHAT_CREATE_ROOM_FAILED = 3013;       // 创建或获取聊天房间失败
-  CHAT_JOIN_ROOM_FAILED = 3014;         // 加入房间失败
-  CHAT_LEAVE_ROOM_FAILED = 3015;        // 离开房间失败
-  CHAT_SEND_MESSAGE_FAILED = 3016;      // 发送消息失败
-  CHAT_SEND_PRIVATE_MESSAGE_FAILED = 3017; // 发送私信失败
-  CHAT_STORE_ROOM_FAILED = 3018;        // 存储聊天房间失败
-
   // 纸牌接龙错误 (3500-4000)
   SOLITAIRE_GET_USER_INFO_FAILED = 3501; // 获取用户信息失败
   SOLITAIRE_PLAYER_NOT_IN_ANY_ROOM = 3502;   // 玩家不在任何房间中

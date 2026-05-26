@@ -161,6 +161,8 @@ export enum SelfLeftRoomReason {
   SELF_LEFT_ROOM_REASON_NEXT_HAND_LEAVE_EXECUTED = 2,
   /** SELF_LEFT_ROOM_REASON_KICKED - 被系统或房间管理逻辑移出房间 */
   SELF_LEFT_ROOM_REASON_KICKED = 3,
+  /** SELF_LEFT_ROOM_REASON_GUEST_ROUND_LIMIT - 游客达到体验局数上限 */
+  SELF_LEFT_ROOM_REASON_GUEST_ROUND_LIMIT = 4,
   UNRECOGNIZED = -1,
 }
 
@@ -178,6 +180,9 @@ export function selfLeftRoomReasonFromJSON(object: any): SelfLeftRoomReason {
     case 3:
     case "SELF_LEFT_ROOM_REASON_KICKED":
       return SelfLeftRoomReason.SELF_LEFT_ROOM_REASON_KICKED;
+    case 4:
+    case "SELF_LEFT_ROOM_REASON_GUEST_ROUND_LIMIT":
+      return SelfLeftRoomReason.SELF_LEFT_ROOM_REASON_GUEST_ROUND_LIMIT;
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -195,6 +200,8 @@ export function selfLeftRoomReasonToJSON(object: SelfLeftRoomReason): string {
       return "SELF_LEFT_ROOM_REASON_NEXT_HAND_LEAVE_EXECUTED";
     case SelfLeftRoomReason.SELF_LEFT_ROOM_REASON_KICKED:
       return "SELF_LEFT_ROOM_REASON_KICKED";
+    case SelfLeftRoomReason.SELF_LEFT_ROOM_REASON_GUEST_ROUND_LIMIT:
+      return "SELF_LEFT_ROOM_REASON_GUEST_ROUND_LIMIT";
     case SelfLeftRoomReason.UNRECOGNIZED:
     default:
       return "UNRECOGNIZED";

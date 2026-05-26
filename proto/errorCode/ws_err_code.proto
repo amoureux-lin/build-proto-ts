@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package common.v1;
+option go_package = "HeronGame/api/common/v1/pb;pb";
+
+// WsErrCode defines custom WebSocket close codes shared by gateway and clients.
+// Standard RFC close codes (1000-1015) continue to use the websocket library
+// constants directly.
+enum WsErrCode {
+  WsErrCodeInvalid = 0; // 无效错误
+
+  // 认证与握手错误 (4400-4410)
+  WsErrCodeAuthFailed         = 4400; // 认证失败
+  WsErrCodeTokenMissing       = 4401; // Token 缺失
+  WsErrCodeTokenInvalid       = 4402; // Token 无效
+  WsErrCodeTokenExpired       = 4403; // Token 过期
+  WsErrCodeTokenStale         = 4404; // Token 与当前会话不匹配
+  WsErrCodeSessionNotFound    = 4405; // 用户会话不存在
+  WsErrCodeIdentityMismatch   = 4406; // 握手身份参数不匹配
+  WsErrCodeEntryParamsInvalid = 4407; // 入场参数非法
+  WsErrCodeEntrySignInvalid   = 4408; // 入场签名非法
+  WsErrCodeTokenRoomInvalid   = 4409; // Token 房间非法
+  WsErrCodeDebugParamsInvalid = 4410; // debug direct 参数非法
+
+  // 连接控制错误 (4429, 4501-4507)
+  WsErrCodeConnectionLimit             = 4429; // 连接数超限
+  WsErrCodeConnectionReplaced          = 4501; // 连接被新连接替换
+  WsErrCodeJoinTimeout                 = 4502; // 加入房间超时
+  WsErrCodeQuickSwitchTimeout          = 4503; // 快速切房超时
+  WsErrCodeJoinRejected                = 4504; // 加入房间被拒绝
+  WsErrCodeConnStatusExpired           = 4505; // 连接状态过期
+  WsErrCodeHeartbeatTimeout            = 4506; // 心跳超时
+  WsErrCodeDebugRoomIsolationViolation = 4507; // debug 房间隔离冲突
+
+  // 加入房间链路错误 (4508-4517)
+  WsErrCodeJoinPacketInvalid         = 4508; // 入房包非法
+  WsErrCodeJoinAdmissionInvalid      = 4509; // 入房准入非法
+  WsErrCodeMatchPartyUnavailable     = 4510; // MatchParty 不可用
+  WsErrCodeMatchPartyRejected        = 4511; // MatchParty 拒绝
+  WsErrCodeMatchPartyInvalidResponse = 4512; // MatchParty 响应非法
+  WsErrCodeJoinRoomRPCFailed         = 4513; // JoinRoom RPC 失败
+  WsErrCodeJoinBindCommitFailed      = 4514; // 入房绑定提交失败
+  WsErrCodePendingJoinInvalid        = 4515; // PendingJoin 非法
+  WsErrCodePendingJoinRPCFailed      = 4516; // PendingJoin RPC 失败
+  WsErrCodePendingJoinCommitFailed   = 4517; // PendingJoin 提交失败
+}

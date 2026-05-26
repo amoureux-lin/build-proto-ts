@@ -48,6 +48,7 @@ enum SelfLeftRoomReason {
   SELF_LEFT_ROOM_REASON_ACTIVE_EXIT = 1; // 玩家主动立即退出
   SELF_LEFT_ROOM_REASON_NEXT_HAND_LEAVE_EXECUTED = 2; // 预约离开在当前局结束后执行
   SELF_LEFT_ROOM_REASON_KICKED = 3; // 被系统或房间管理逻辑移出房间
+  SELF_LEFT_ROOM_REASON_GUEST_ROUND_LIMIT = 4; // 游客达到体验局数上限
 }
 
 // 默认的符合前端玩家信息结构的proto

@@ -71,11 +71,21 @@ export function resolvePaths(contextInput) {
     ? resolveConfiguredPath(config.errorCode.outputCsvPath, [cwd, outputRoot, configDir, toolRoot])
     : path.join(generatedDir, 'errorCode', `${config.errorCode.protoName}.csv`);
 
+  const wsCloseOutputCsvPath = config.errorCode.wsCloseOutputCsvPath
+    ? resolveConfiguredPath(config.errorCode.wsCloseOutputCsvPath, [cwd, outputRoot, configDir, toolRoot])
+    : path.join(generatedDir, 'errorCode', `${config.errorCode.wsCloseProtoName}.csv`);
+
   const errorSourceProtoPath = config.errorCode.sourceProtoPath
     ? resolveConfiguredPath(config.errorCode.sourceProtoPath, [cwd, outputRoot, configDir, toolRoot, projectApiRoot])
     : projectApiRoot
       ? path.join(projectApiRoot, 'common', config.messageTypes.version, 'proto', `${config.errorCode.protoName}.proto`)
       : path.join(protoWorkspaceDir, 'common', config.messageTypes.version, 'proto', `${config.errorCode.protoName}.proto`);
+
+  const wsCloseSourceProtoPath = config.errorCode.wsCloseSourceProtoPath
+    ? resolveConfiguredPath(config.errorCode.wsCloseSourceProtoPath, [cwd, outputRoot, configDir, toolRoot, projectApiRoot])
+    : projectApiRoot
+      ? path.join(projectApiRoot, 'common', config.messageTypes.version, 'proto', `${config.errorCode.wsCloseProtoName}.proto`)
+      : path.join(protoWorkspaceDir, 'common', config.messageTypes.version, 'proto', `${config.errorCode.wsCloseProtoName}.proto`);
 
   return {
     cwd,
@@ -92,7 +102,9 @@ export function resolvePaths(contextInput) {
     errorCodeWorkspaceDir,
     plannerCsvPath,
     outputCsvPath,
+    wsCloseOutputCsvPath,
     errorSourceProtoPath,
+    wsCloseSourceProtoPath,
   };
 }
 

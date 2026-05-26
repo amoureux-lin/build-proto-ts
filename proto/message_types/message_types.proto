@@ -87,22 +87,6 @@ enum MessageType {
   ROOM_AGREE_ALLOW_MIC_RES = 322;         //同意房主邀请上麦响应
   ROOM_AGREE_ALLOW_MIC_BROADCAST = 323;   //同意房主邀请上麦广播
 
-  //聊天消息类型枚举 [1000-1500]
-  CHAT_JOIN_ROOM_REQ = 1000;                //进入房间请求
-  CHAT_JOIN_ROOM_RES = 1001;                //进入房间响应
-  CHAT_SEND_MSG_REQ = 1002;                 //发送消息请求
-  CHAT_SEND_MSG_RES = 1003;                 //发送消息响应
-  CHAT_MSG_BROADCAST = 1004;                //消息广播
-  CHAT_LEAVE_ROOM_REQ = 1005;               //离开房间请求
-  CHAT_LEAVE_ROOM_RES = 1006;               //离开房间响应
-  CHAT_PRIVATE_MSG_REQ = 1007;              //私信请求
-  CHAT_PRIVATE_MSG_RES = 1008;              //私信响应
-  CHAT_PRIVATE_MSG_BROADCAST = 1009;        //消息广播
-  CHAT_SIT_DOWN_REQ = 1010;                 //玩家坐下请求
-  CHAT_SIT_DOWN_RES = 1011;                 //玩家坐下响应
-  CHAT_STAND_UP_REQ = 1012;                 //玩家站起请求
-  CHAT_STAND_UP_RES = 1013;                 //玩家站起响应
-
   //接龙游戏消息枚举 [1500-2000]
   SOLITAIRE_JOIN_ROOM_REQ = 1500;                 // 加入房间请求
   SOLITAIRE_JOIN_ROOM_RES = 1501;                 // 加入房间响应
@@ -194,6 +178,12 @@ enum MessageType {
   TONGITS_GET_PLAYER_HISTORY_REQ = 3033;             // 获取玩家历史记录请求
   TONGITS_GET_PLAYER_HISTORY_RES = 3034;             // 获取玩家历史记录响应
   TONGITS_GAME_READY_BROADCAST = 3035;  // 开始游戏倒计时广播
+  TONGITS_SWITCH_AUTO_GROUP_CARDS_REQ = 3036; // 开启/关闭自动组牌请求
+  TONGITS_SWITCH_AUTO_GROUP_CARDS_RES = 3037; // 开启/关闭自动组牌响应
+  TONGITS_GAME_PLAYER_GROUP_CARDS_REQ = 3038; // 玩家手动组牌请求
+  TONGITS_GAME_PLAYER_GROUP_CARDS_RES = 3039; // 玩家手动组牌响应
+  TONGITS_NEWBIE_GUIDE_REQ = 3040; // 新手引导
+  TONGITS_NEWBIE_GUIDE_RES = 3041; // 新手引导
 
   // 木头人游戏 [3501-4000]
   UNLEASH_JOIN_ROOM_REQ = 3501;              // 加入房间请求
@@ -346,13 +336,12 @@ enum MessageType {
   BINGOFLASH_GET_PLAYER_HISTORY_REQ = 5607; // 获取玩家历史记录请求
   BINGOFLASH_GET_PLAYER_HISTORY_RES = 5608; // 获取玩家历史记录响应
   BINGOFLASH_JOIN_ROOM_BROADCAST = 5609; // 入房公共广播
-  BINGOFLASH_COUNTDOWN_BROADCAST = 5611; // 倒计时广播
+  BINGOFLASH_START_GAME_BROADCAST = 5611; // 开始游戏广播
   BINGOFLASH_CALL_BALL_BROADCAST = 5612; // 唱号广播
   BINGOFLASH_DECLARE_BINGO_BROADCAST = 5613; // Bingo 声明广播
   BINGOFLASH_RANK_UPDATE_BROADCAST = 5614; // 排行榜更新广播
   BINGOFLASH_END_GAME_BROADCAST = 5615; // 停唱广播
   BINGOFLASH_PRIZE_BROADCAST = 5616; // 派奖广播
   BINGOFLASH_RESET_BROADCAST = 5617; // 重置广播
-
 
 }

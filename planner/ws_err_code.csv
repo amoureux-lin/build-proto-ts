@@ -1,0 +1,39 @@
+# WS onClose 消息配置表
+# code  — WebSocket close code（整数字符串）
+# type  — 展示方式：toast | popup | popup_close | recharge | silent
+# extra — 补充描述（仅供参考，实际显示文案由 i18n JSON 中以 code 为 key 的翻译决定）
+code,type,extra
+# ── 无效 / 占位 ───────────────────────────────────────────────────────────────
+0,silent,无效错误
+# ── 认证与握手 ───────────────────────────────────────────────────────────────
+4400,popup_close,认证失败
+4401,popup_close,Token 缺失
+4402,popup_close,Token 无效
+4403,popup_close,Token 过期
+4404,popup_close,Token 与当前会话不匹配
+4405,popup_close,用户会话不存在
+4406,popup_close,握手身份参数不匹配
+4407,popup_close,入场参数非法
+4408,popup_close,入场签名非法
+4409,popup_close,Token 房间非法
+4410,popup_close,debug direct 参数非法
+# ── 连接控制 ─────────────────────────────────────────────────────────────────
+4429,popup_close,连接数超限
+4501,popup_close,连接被新连接替换
+4502,popup_close,加入房间超时
+4503,popup_close,快速切房超时
+4504,popup_close,加入房间被拒绝
+4505,popup_close,连接状态过期
+4506,popup_close,心跳超时
+4507,popup_close,debug 房间隔离冲突
+# ── 加入房间链路 ─────────────────────────────────────────────────────────────
+4508,popup_close,入房包非法
+4509,popup_close,入房准入非法
+4510,popup_close,MatchParty 不可用
+4511,popup_close,MatchParty 拒绝
+4512,popup_close,MatchParty 响应非法
+4513,popup_close,JoinRoom RPC 失败
+4514,popup_close,入房绑定提交失败
+4515,popup_close,PendingJoin 非法
+4516,popup_close,PendingJoin RPC 失败
+4517,popup_close,PendingJoin 提交失败

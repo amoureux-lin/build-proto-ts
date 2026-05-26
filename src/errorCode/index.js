@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { parseErrorProto, parseWsCloseProto } from './parseErrorProto.js';
-import { syncPlannerMetadata, writeErrorCsv, writeWsCloseCsv } from './writeErrorCsv.js';
+import { getWsCloseCsvOptions, syncPlannerMetadata, writeErrorCsv, writeWsCloseCsv } from './writeErrorCsv.js';
 
 export function runErrorCodePipeline(context, collector) {
   if (!context.config.errorCode.enabled) {
@@ -16,6 +16,7 @@ export function runErrorCodePipeline(context, collector) {
     plannerCsvPath,
     wsCloseSourceProtoPath,
     wsCloseOutputCsvPath,
+    wsClosePlannerCsvPath,
   } = context.paths;
   if (!fs.existsSync(errorSourceProtoPath)) {
     collector.addWarning(`错误码 proto 不存在，跳过导出: ${errorSourceProtoPath}`);
@@ -44,6 +45,9 @@ export function runErrorCodePipeline(context, collector) {
   fs.copyFileSync(wsCloseSourceProtoPath, copiedWsCloseProtoPath);
 
   const wsCloseProtoContent = fs.readFileSync(copiedWsCloseProtoPath, 'utf8');
-  const wsCloseRows = parseWsCloseProto(wsCloseProtoContent);
+  let wsCloseRows = parseWsCloseProto(wsCloseProtoContent);
+  if (context.config.errorCode.syncPlanner) {
+    wsCloseRows = syncPlannerMetadata(wsCloseRows, wsClosePlannerCsvPath, getWsCloseCsvOptions());
+  }
   writeWsCloseCsv(wsCloseOutputCsvPath, wsCloseRows);
 }

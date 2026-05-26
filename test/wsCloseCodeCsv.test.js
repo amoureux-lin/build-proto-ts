@@ -102,3 +102,54 @@ test('runErrorCodePipeline writes websocket onClose CSV when ws_err_code proto e
     /4501,popup_close,连接被新连接替换/
   );
 });
+
+test('runErrorCodePipeline merges websocket planner CSV into output and backfills missing rows', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ws-close-planner-pipeline-'));
+  const sourceDir = path.join(dir, 'source');
+  const workspaceDir = path.join(dir, 'workspace');
+  const outputDir = path.join(dir, 'output');
+  const plannerDir = path.join(dir, 'planner');
+  fs.mkdirSync(sourceDir, { recursive: true });
+  fs.mkdirSync(plannerDir, { recursive: true });
+
+  fs.writeFileSync(path.join(sourceDir, 'error_codes.proto'), 'enum ErrorCode { SUCCESS = 0; }', 'utf8');
+  fs.writeFileSync(path.join(sourceDir, 'ws_err_code.proto'), protoText, 'utf8');
+  fs.writeFileSync(
+    path.join(plannerDir, 'ws_err_code.csv'),
+    ['code,type,extra', '4501,toast,策划改过的关闭提示', ''].join('\n'),
+    'utf8'
+  );
+
+  const context = {
+    config: {
+      errorCode: {
+        enabled: true,
+        protoName: 'error_codes',
+        wsCloseProtoName: 'ws_err_code',
+        syncPlanner: true,
+      },
+    },
+    paths: {
+      errorSourceProtoPath: path.join(sourceDir, 'error_codes.proto'),
+      wsCloseSourceProtoPath: path.join(sourceDir, 'ws_err_code.proto'),
+      errorCodeWorkspaceDir: workspaceDir,
+      outputCsvPath: path.join(outputDir, 'error_codes.csv'),
+      wsCloseOutputCsvPath: path.join(outputDir, 'ws_err_code.csv'),
+      plannerCsvPath: null,
+      wsClosePlannerCsvPath: path.join(plannerDir, 'ws_err_code.csv'),
+    },
+  };
+  const collector = {
+    addWarning(message) {
+      throw new Error(message);
+    },
+  };
+
+  runErrorCodePipeline(context, collector);
+
+  const outputContent = fs.readFileSync(path.join(outputDir, 'ws_err_code.csv'), 'utf8');
+  const plannerContent = fs.readFileSync(path.join(plannerDir, 'ws_err_code.csv'), 'utf8');
+  assert.match(outputContent, /4501,toast,策划改过的关闭提示/);
+  assert.match(plannerContent, /4513,popup_close,JoinRoom RPC 失败/);
+  assert.match(plannerContent, /# WS onClose 消息配置表/);
+});

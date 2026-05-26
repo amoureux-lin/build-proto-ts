@@ -65,7 +65,11 @@ export function resolvePaths(contextInput) {
 
   const plannerCsvPath = config.errorCode.plannerCsvPath
     ? resolveConfiguredPath(config.errorCode.plannerCsvPath, [cwd, outputRoot, configDir, toolRoot])
-    : path.join(generatedDir, 'errorCode', 'error_codes1.csv');
+    : path.join(outputRoot, 'planner', `${config.errorCode.protoName}.csv`);
+
+  const wsClosePlannerCsvPath = config.errorCode.wsClosePlannerCsvPath
+    ? resolveConfiguredPath(config.errorCode.wsClosePlannerCsvPath, [cwd, outputRoot, configDir, toolRoot])
+    : path.join(outputRoot, 'planner', `${config.errorCode.wsCloseProtoName}.csv`);
 
   const outputCsvPath = config.errorCode.outputCsvPath
     ? resolveConfiguredPath(config.errorCode.outputCsvPath, [cwd, outputRoot, configDir, toolRoot])
@@ -101,6 +105,7 @@ export function resolvePaths(contextInput) {
     runtimeNodeBinaryPath,
     errorCodeWorkspaceDir,
     plannerCsvPath,
+    wsClosePlannerCsvPath,
     outputCsvPath,
     wsCloseOutputCsvPath,
     errorSourceProtoPath,

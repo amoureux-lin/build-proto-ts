@@ -112,3 +112,14 @@ test('syncPlannerMetadata converts legacy numeric display types', () => {
   assert.equal(synced.find((row) => row.code === '6004').type, 'toast');
   assert.equal(synced.find((row) => row.code === '1107').type, 'recharge');
 });
+
+test('syncPlannerMetadata creates planner CSV when missing', () => {
+  const rows = parseErrorProto(protoText);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'error-code-missing-planner-'));
+  const plannerPath = path.join(dir, 'error_codes.csv');
+
+  const synced = syncPlannerMetadata(rows, plannerPath);
+
+  assert.equal(synced.length, rows.length);
+  assert.match(fs.readFileSync(plannerPath, 'utf8'), /1107,recharge,用户带入金币余额不足/);
+});

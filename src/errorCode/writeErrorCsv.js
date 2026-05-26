@@ -150,8 +150,14 @@ function parseCsvFile(filePath) {
   });
 }
 
-export function syncPlannerMetadata(rows, plannerCsvPath) {
-  if (!plannerCsvPath || !fs.existsSync(plannerCsvPath)) {
+export function syncPlannerMetadata(rows, plannerCsvPath, options = {}) {
+  if (!plannerCsvPath) {
+    return rows;
+  }
+
+  if (!fs.existsSync(plannerCsvPath)) {
+    fs.mkdirSync(path.dirname(plannerCsvPath), { recursive: true });
+    fs.writeFileSync(plannerCsvPath, serializeRows(rows, options), 'utf8');
     return rows;
   }
 
@@ -173,7 +179,7 @@ export function syncPlannerMetadata(rows, plannerCsvPath) {
   const missingRows = mergedRows.filter((row) => !mergedCodes.has(row.code));
   if (missingRows.length) {
     fs.mkdirSync(path.dirname(plannerCsvPath), { recursive: true });
-    fs.writeFileSync(plannerCsvPath, serializeRows([...plannerRows, ...missingRows]), 'utf8');
+    fs.writeFileSync(plannerCsvPath, serializeRows([...plannerRows, ...missingRows], options), 'utf8');
   }
 
   return mergedRows;
@@ -188,10 +194,21 @@ export function writeWsCloseCsv(outputPath, rows) {
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(
     outputPath,
-    serializeRows(rows, {
-      header: WS_CLOSE_HEADER,
-      getSection: getWsCloseSectionByCode,
-    }),
+    serializeRows(rows, getWsCloseCsvOptions()),
     'utf8'
   );
+}
+
+export function getErrorCodeCsvOptions() {
+  return {
+    header: ERROR_CODE_HEADER,
+    getSection: getErrorSectionByCode,
+  };
+}
+
+export function getWsCloseCsvOptions() {
+  return {
+    header: WS_CLOSE_HEADER,
+    getSection: getWsCloseSectionByCode,
+  };
 }

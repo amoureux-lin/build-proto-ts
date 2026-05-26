@@ -56,6 +56,7 @@ export function normalizeProtoConfig(rawConfig) {
       outputCsvPath: errorCode.outputCsvPath ?? null,
       wsCloseOutputCsvPath: errorCode.wsCloseOutputCsvPath ?? null,
       plannerCsvPath: errorCode.plannerCsvPath ?? paths.plannerCsvPath ?? null,
+      wsClosePlannerCsvPath: errorCode.wsClosePlannerCsvPath ?? paths.wsClosePlannerCsvPath ?? null,
       syncPlanner: errorCode.syncPlanner ?? true,
     },
     raw: rawConfig,
